@@ -1,0 +1,2928 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atomwelt – Szene 5: Das Bohrsche Atommodell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   RESET & ROOT
+═══════════════════════════════════════════════════════════════ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --paper:    #f5f0e8;
+  --paper2:   #ede7d8;
+  --paper3:   #e3dbc8;
+  --ink:      #1a1410;
+  --ink2:     #3d3028;
+  --ink3:     #6b5d4f;
+  --ink4:     #9c8b7a;
+  --amber:    #c47a1e;
+  --amber2:   #e8a832;
+  --amber3:   #f5d080;
+  --teal:     #1a6b6b;
+  --teal2:    #2a9494;
+  --teal3:    #a8d8d8;
+  --red:      #8b2020;
+  --red2:     #c43030;
+  --green:    #1a5c2a;
+  --green2:   #2a8c40;
+  --green3:   #a8d8b0;
+  --proton:   #b84020;
+  --proton2:  #e06030;
+  --neutron:  #607080;
+  --neutron2: #8090a0;
+  --electron: #1a5080;
+  --electron2:#2a78c0;
+  --electron3:#80c0f0;
+
+  --shadow-sm: 0 1px 3px rgba(26,20,16,0.12);
+  --shadow:    0 3px 12px rgba(26,20,16,0.15);
+  --shadow-lg: 0 8px 32px rgba(26,20,16,0.18);
+  --radius:    6px;
+  --radius-lg: 12px;
+  --font-serif: 'Crimson Pro', Georgia, serif;
+  --font-mono:  'Space Mono', monospace;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: 17px;
+  line-height: 1.65;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* paper texture overlay */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  background-size: 180px;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.6;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════════════════════════ */
+#app {
+  position: relative; z-index: 1;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+  min-height: 100vh;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   HEADER / BREADCRUMB
+═══════════════════════════════════════════════════════════════ */
+header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-bottom: 14px;
+  border-bottom: 2px solid var(--ink);
+  margin-bottom: 28px;
+}
+.wordmark {
+  font-family: var(--font-mono);
+  font-size: 0.85rem; letter-spacing: 4px;
+  color: var(--ink2);
+}
+.wordmark span { color: var(--amber); }
+.breadcrumb {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.78rem; color: var(--ink4);
+  font-family: var(--font-mono);
+}
+.breadcrumb .sep { opacity: 0.4; }
+.breadcrumb .current { color: var(--teal); font-weight: 700; }
+
+/* progress dots */
+.path-dots {
+  display: flex; gap: 5px; align-items: center;
+}
+.path-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--paper3);
+  border: 1.5px solid var(--ink4);
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+.path-dot.done   { background: var(--teal); border-color: var(--teal); }
+.path-dot.active { background: var(--amber); border-color: var(--amber); width: 22px; border-radius: 4px; }
+.path-dot.future { opacity: 0.4; }
+
+/* ═══════════════════════════════════════════════════════════════
+   SCENE GRID
+═══════════════════════════════════════════════════════════════ */
+#scene {
+  display: grid;
+  grid-template-columns: 260px 1fr 180px;
+  grid-template-rows: auto auto;
+  gap: 20px;
+  align-items: start;
+  transition: grid-template-columns 0.5s ease;
+}
+
+/* ── LAYOUT MODES ── */
+
+/* CINEMATIC: big NPC + wide dialog, no atom canvas */
+#scene.mode-cinematic {
+  grid-template-columns: 200px 1fr;
+  grid-template-rows: auto auto;
+}
+#scene.mode-cinematic #atom-stage        { display: none !important; }
+#scene.mode-cinematic #particle-bank     { display: none !important; }
+#scene.mode-cinematic #npc-panel         { grid-column: 1; grid-row: 1 / 3; }
+#scene.mode-cinematic #cinematic-dialog  { display: flex; grid-column: 2; grid-row: 1; }
+#scene.mode-cinematic #info-bar          { grid-column: 2; grid-row: 2; }
+
+/* SPLIT: NPC left, atom center, tokens right (default) */
+#scene.mode-split {
+  grid-template-columns: 260px 1fr 180px;
+}
+#scene.mode-split #cinematic-dialog { display: none !important; }
+#scene.mode-split #atom-stage       { display: flex !important; }
+#scene.mode-split #transfer-screen  { display: none !important; }
+
+/* SPLIT with exercise selector visible: push info-bar to row 3 */
+#scene.mode-split #exercise-selector.show ~ #info-bar,
+#scene.has-exercise #info-bar {
+  grid-column: 1 / 4; grid-row: 3;
+}
+
+/* FOCUS: NPC top-left, large content area right */
+#scene.mode-focus {
+  grid-template-columns: 200px 1fr;
+}
+#scene.mode-focus #cinematic-dialog  { display: none !important; }
+#scene.mode-focus #atom-stage        { display: none !important; }
+#scene.mode-focus #particle-bank     { display: none !important; }
+#scene.mode-focus #npc-panel         { grid-column: 1; grid-row: 1; }
+#scene.mode-focus #transfer-screen   { grid-column: 2; grid-row: 1 / 3; }
+#scene.mode-focus #info-bar          { grid-column: 1; grid-row: 2; }
+
+
+/* ═══════════════════════════════════════════════════════════════
+   NPC PANEL
+═══════════════════════════════════════════════════════════════ */
+#npc-panel {
+  grid-column: 1; grid-row: 1 / 3;
+  background: var(--paper2);
+  border: 1.5px solid var(--ink3);
+  border-radius: var(--radius-lg);
+  padding: 20px 18px;
+  box-shadow: var(--shadow);
+  position: sticky; top: 20px;
+  transition: all 0.4s ease;
+}
+
+/* cinematic: NPC panel gets smaller avatar */
+.mode-cinematic #npc-panel .npc-avatar { width: 80px; height: 80px; }
+.mode-cinematic #npc-panel #dialog-bubble { display: none; }
+.mode-cinematic #npc-panel #next-btn  { display: none; }
+.mode-cinematic #npc-panel #hint-btn  { display: none; }
+.mode-cinematic #npc-panel #tts-controls { display: none; }
+.mode-cinematic #npc-panel .step-track { display: none; }
+
+/* focus: NPC panel compact */
+.mode-focus #npc-panel { grid-row: 1; position: static; }
+.mode-focus #npc-panel .npc-avatar { width: 70px; height: 70px; }
+.mode-focus #npc-panel #dialog-bubble { display: none; }
+.mode-focus #npc-panel #next-btn { display: none; }
+.mode-focus #npc-panel #hint-btn { display: none; }
+.mode-focus #npc-panel #tts-controls { display: none; }
+.mode-focus #npc-panel .step-track { display: none; }
+
+
+.npc-label {
+  font-family: var(--font-mono);
+  font-size: 0.62rem; letter-spacing: 3px;
+  color: var(--ink4); text-align: center;
+  margin-bottom: 3px; text-transform: uppercase;
+}
+.npc-name {
+  font-family: var(--font-mono);
+  font-size: 0.9rem; font-weight: 700;
+  color: var(--teal); text-align: center;
+  margin-bottom: 14px;
+}
+
+/* NPC Avatar */
+.npc-avatar {
+  width: 110px; height: 110px;
+  margin: 0 auto 14px;
+  position: relative;
+}
+.npc-avatar svg { width: 100%; height: 100%; overflow: visible; }
+
+/* talking animation */
+.speech-wave {
+  display: flex; gap: 2px; justify-content: center;
+  align-items: flex-end; height: 14px; margin-bottom: 12px;
+}
+.speech-wave span {
+  width: 3px; background: var(--teal2);
+  border-radius: 2px;
+  transition: height 0.1s;
+}
+.speech-wave.talking span:nth-child(1) { animation: sw 0.7s 0.0s ease-in-out infinite alternate; }
+.speech-wave.talking span:nth-child(2) { animation: sw 0.7s 0.12s ease-in-out infinite alternate; }
+.speech-wave.talking span:nth-child(3) { animation: sw 0.7s 0.24s ease-in-out infinite alternate; }
+.speech-wave.talking span:nth-child(4) { animation: sw 0.7s 0.08s ease-in-out infinite alternate; }
+.speech-wave.talking span:nth-child(5) { animation: sw 0.7s 0.18s ease-in-out infinite alternate; }
+.speech-wave span { height: 3px; }
+@keyframes sw {
+  from { height: 3px; }
+  to   { height: 12px; }
+}
+
+/* dialog bubble */
+#dialog-bubble {
+  background: var(--paper);
+  border: 1.5px solid var(--ink3);
+  border-radius: var(--radius);
+  padding: 13px 14px;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  min-height: 130px;
+  margin-bottom: 12px;
+  position: relative;
+}
+#dialog-bubble::before {
+  content: '"';
+  position: absolute; top: -2px; left: 10px;
+  font-size: 2.5rem; color: var(--ink4); opacity: 0.25;
+  font-family: Georgia, serif; line-height: 1;
+}
+#dialog-text { position: relative; z-index: 1; }
+#dialog-text strong { color: var(--teal); font-weight: 600; }
+#dialog-text em { color: var(--amber); font-style: normal; font-weight: 600; }
+#dialog-text .warn { color: var(--red2); font-weight: 600; }
+
+/* next button */
+#next-btn {
+  width: 100%;
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 0.7rem; letter-spacing: 2px;
+  padding: 11px 14px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+#next-btn:hover:not(:disabled) {
+  background: var(--teal);
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+}
+#next-btn:active:not(:disabled) { transform: translateY(0); }
+#next-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+#hint-btn {
+  width: 100%; margin-top: 8px;
+  background: transparent;
+  color: var(--amber);
+  border: 1.5px dashed var(--amber);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 0.65rem; letter-spacing: 1px;
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: none;
+}
+#hint-btn:hover { background: var(--amber3); color: var(--ink); }
+#hint-btn.used { opacity: 0.3; pointer-events: none; }
+
+/* step dots */
+.step-track {
+  display: flex; gap: 4px; justify-content: center; margin-top: 10px;
+}
+.step-pip {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--ink4); opacity: 0.3;
+  transition: all 0.3s;
+}
+.step-pip.done   { background: var(--teal); opacity: 1; }
+.step-pip.active { background: var(--amber); opacity: 1; width: 14px; border-radius: 3px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   ATOM STAGE
+═══════════════════════════════════════════════════════════════ */
+#atom-stage {
+  grid-column: 2; grid-row: 1;
+  background: var(--paper2);
+  border: 1.5px solid var(--ink3);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  box-shadow: var(--shadow);
+  display: flex; flex-direction: column; align-items: center;
+  min-height: 400px;
+  position: relative;
+}
+
+.stage-header {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; margin-bottom: 16px;
+}
+.stage-title {
+  font-family: var(--font-mono);
+  font-size: 0.65rem; letter-spacing: 3px;
+  color: var(--ink4); text-transform: uppercase;
+}
+#element-badge {
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: 0.7rem; padding: 4px 10px;
+  border-radius: 3px;
+  display: none;
+}
+
+/* atom canvas */
+#atom-canvas {
+  position: relative;
+  width: 340px; height: 340px;
+  flex-shrink: 0;
+}
+
+/* nucleus */
+#nucleus {
+  position: absolute;
+  width: 60px; height: 60px;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 35%, #e07040, #8b2010);
+  border: 2px solid rgba(200, 80, 30, 0.5);
+  box-shadow: 0 0 16px rgba(180, 60, 20, 0.35), inset 0 1px 2px rgba(255,200,150,0.3);
+  position: absolute;
+  z-index: 10;
+  cursor: default;
+  transition: box-shadow 0.3s, width 0.3s, height 0.3s;
+  overflow: visible;
+}
+#nucleus:hover { box-shadow: 0 0 24px rgba(180, 60, 20, 0.5), inset 0 1px 2px rgba(255,200,150,0.3); }
+
+#nucleus-label {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-mono);
+  font-size: 0.5rem; letter-spacing: 1px;
+  color: rgba(255,220,180,0.5);
+  text-align: center; pointer-events: none;
+  line-height: 1.2;
+}
+
+/* nucleus drop zone */
+#nucleus-drop {
+  position: absolute;
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 15; cursor: copy;
+  transition: background 0.2s;
+}
+#nucleus-drop.drag-over {
+  background: rgba(180, 60, 20, 0.15);
+  outline: 2px dashed var(--proton2);
+  outline-offset: 4px;
+}
+
+/* orbits */
+.orbit {
+  position: absolute; border-radius: 50%;
+  border: 1px dashed rgba(26,20,16,0.15);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  transition: border-color 0.4s, border-style 0.4s;
+  pointer-events: none;
+}
+.orbit.active {
+  border: 1.5px solid rgba(26,96,107,0.45);
+  border-style: solid;
+}
+.orbit-label {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: 0.5rem; color: var(--ink4);
+  opacity: 0.55; pointer-events: none;
+  top: 6px; right: 8px;
+}
+
+/* orbit hover zone */
+.orbit-hover-zone {
+  position: absolute; border-radius: 50%;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 6; cursor: copy;
+  pointer-events: none;
+}
+.orbit-hover-zone.droppable {
+  pointer-events: all;
+  /* ring highlight on dragover */
+  transition: box-shadow 0.15s;
+}
+.orbit-hover-zone.drag-over-orbit {
+  box-shadow: inset 0 0 0 2px rgba(42,148,148,0.5);
+  border-radius: 50%;
+}
+.orbit-hover-zone.drag-over-orbit + .orbit,
+.orbit.orbit-highlight {
+  border-color: rgba(42,148,148,0.7);
+  border-width: 2px;
+}
+
+/* electrons on orbits */
+.orbit-wrapper {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  pointer-events: none;
+  border-radius: 50%;
+}
+.e-spin {
+  position: absolute; inset: 0;
+  animation: spin linear infinite;
+}
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.e-dot {
+  position: absolute;
+  width: 11px; height: 11px;
+  background: radial-gradient(circle at 35% 35%, #80c0f0, #1a5080);
+  border-radius: 50%;
+  border: 1px solid rgba(128,192,240,0.6);
+  box-shadow: 0 0 6px rgba(42,120,192,0.5);
+  top: 0; left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* nucleus particles */
+.n-proton, .n-neutron {
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  position: absolute;
+  animation: pop-in 0.28s cubic-bezier(0.34,1.56,0.64,1);
+}
+.n-proton  { background: radial-gradient(circle at 35% 35%, #f08050, #8b2010); border: 1px solid rgba(240,128,80,0.7); box-shadow: 0 0 4px rgba(180,60,20,0.5); }
+.n-neutron { background: radial-gradient(circle at 35% 35%, #90a0b0, #404860); border: 1px solid rgba(144,160,176,0.6); box-shadow: 0 0 3px rgba(64,72,96,0.3); }
+
+@keyframes pop-in {
+  0%   { transform: scale(0) rotate(-20deg); opacity: 0; }
+  70%  { transform: scale(1.25) rotate(5deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PARTICLE BANK
+═══════════════════════════════════════════════════════════════ */
+#particle-bank {
+  grid-column: 3; grid-row: 1;
+  background: var(--paper2);
+  border: 1.5px solid var(--ink3);
+  border-radius: var(--radius-lg);
+  padding: 16px 14px;
+  box-shadow: var(--shadow);
+}
+
+.bank-title {
+  font-family: var(--font-mono);
+  font-size: 0.6rem; letter-spacing: 3px;
+  color: var(--ink4); text-align: center;
+  margin-bottom: 14px; text-transform: uppercase;
+}
+
+.particle-group { margin-bottom: 14px; }
+.p-group-label {
+  font-family: var(--font-mono);
+  font-size: 0.58rem; letter-spacing: 1px;
+  color: var(--ink4); margin-bottom: 6px;
+  display: flex; align-items: center; gap: 5px;
+}
+.p-group-label::after { content: ''; flex: 1; height: 1px; background: var(--ink4); opacity: 0.3; }
+.p-count { font-size: 0.65rem; color: var(--ink4); text-align: center; margin-top: 4px; font-family: var(--font-mono); }
+
+.particle-token {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size: 0.6rem; font-weight: 700;
+  cursor: grab; margin: 2px;
+  transition: transform 0.15s, box-shadow 0.15s, opacity 0.2s;
+  user-select: none; -webkit-user-select: none;
+  position: relative;
+}
+.particle-token:hover:not(.used):not(.locked) { transform: scale(1.12); }
+.particle-token:active:not(.used):not(.locked) { cursor: grabbing; }
+.particle-token.proton   { background: radial-gradient(circle at 35% 35%, #e07040, #8b2010); color: #ffe8d0; border: 1.5px solid rgba(224,112,64,0.5); box-shadow: 0 2px 6px rgba(140,32,16,0.3); }
+.particle-token.neutron  { background: radial-gradient(circle at 35% 35%, #8090a0, #404860); color: #d8e0e8; border: 1.5px solid rgba(128,144,160,0.4); box-shadow: 0 2px 6px rgba(64,72,96,0.25); }
+.particle-token.electron { background: radial-gradient(circle at 35% 35%, #80c0f0, #1a5080); color: #d0ecff; border: 1.5px solid rgba(128,192,240,0.5); box-shadow: 0 2px 6px rgba(26,80,128,0.3); }
+.particle-token.used { opacity: 0.18; cursor: not-allowed; pointer-events: none; }
+.particle-token.locked { opacity: 0.25; cursor: not-allowed; pointer-events: none; }
+
+/* element info card */
+#element-card {
+  margin-top: 14px;
+  background: var(--paper);
+  border: 1px solid var(--ink3);
+  border-radius: var(--radius);
+  padding: 10px;
+  display: none;
+}
+.ec-symbol {
+  font-family: var(--font-mono);
+  font-size: 1.6rem; font-weight: 700;
+  color: var(--ink); text-align: center;
+  line-height: 1;
+}
+.ec-name { font-size: 0.78rem; text-align: center; color: var(--ink3); margin: 2px 0 8px; }
+.ec-row { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--ink4); font-family: var(--font-mono); margin: 2px 0; }
+.ec-val { color: var(--ink2); font-weight: 700; }
+
+/* ═══════════════════════════════════════════════════════════════
+   MISSION / INFO BAR
+═══════════════════════════════════════════════════════════════ */
+#info-bar {
+  grid-column: 2 / 4; grid-row: 2;
+  background: var(--paper2);
+  border: 1.5px solid var(--ink3);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  box-shadow: var(--shadow);
+}
+
+.mission-row {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 12px;
+}
+.mission-tag {
+  font-family: var(--font-mono);
+  font-size: 0.6rem; letter-spacing: 2px;
+  color: var(--amber); flex-shrink: 0;
+  text-transform: uppercase;
+}
+#mission-text { font-size: 0.9rem; color: var(--ink2); flex: 1; }
+#mission-badge {
+  font-family: var(--font-mono);
+  font-size: 0.6rem; letter-spacing: 1px;
+  padding: 4px 10px; border-radius: 20px;
+  background: var(--paper3); color: var(--ink4);
+  border: 1px solid var(--ink4); flex-shrink: 0;
+  transition: all 0.3s;
+}
+#mission-badge.active  { background: #fff3d0; color: var(--amber); border-color: var(--amber); }
+#mission-badge.success { background: #d8f0dc; color: var(--green); border-color: var(--green2); animation: pulse-badge 1.5s ease-in-out infinite; }
+@keyframes pulse-badge { 0%,100% { opacity:1; } 50% { opacity:0.7; } }
+
+/* fact cards */
+#fact-cards {
+  display: flex; gap: 10px; flex-wrap: nowrap; overflow-x: auto;
+}
+.fact-card {
+  background: var(--paper);
+  border: 1px solid var(--ink3);
+  border-radius: var(--radius);
+  padding: 10px 13px;
+  flex: 1; min-width: 150px;
+  font-size: 0.82rem; line-height: 1.5;
+  opacity: 0; transform: translateX(-10px);
+  transition: opacity 0.4s, transform 0.4s;
+  border-left: 3px solid var(--teal2);
+}
+.fact-card.visible { opacity: 1; transform: translateX(0); }
+.fact-title {
+  font-family: var(--font-mono);
+  font-size: 0.58rem; letter-spacing: 2px;
+  color: var(--teal); margin-bottom: 5px;
+  text-transform: uppercase;
+}
+.fact-body { color: var(--ink3); }
+.fact-body strong { color: var(--amber); font-weight: 600; }
+.fact-body em { color: var(--teal); font-style: normal; }
+
+/* ═══════════════════════════════════════════════════════════════
+   FEEDBACK TOAST
+═══════════════════════════════════════════════════════════════ */
+#feedback-toast {
+  position: fixed; bottom: 28px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: var(--radius);
+  padding: 11px 20px;
+  font-size: 0.88rem; font-family: var(--font-serif);
+  max-width: 480px; text-align: center;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  z-index: 100; pointer-events: none;
+  box-shadow: var(--shadow-lg);
+}
+#feedback-toast.show {
+  opacity: 1; transform: translateX(-50%) translateY(0);
+}
+#feedback-toast.error   { background: var(--red);   color: #ffe8e8; }
+#feedback-toast.success { background: var(--green);  color: #e8f5ea; }
+#feedback-toast.info    { background: var(--teal);   color: #e0f5f5; }
+
+/* ═══════════════════════════════════════════════════════════════
+   SUCCESS SCREEN
+═══════════════════════════════════════════════════════════════ */
+#success-screen {
+  display: none; position: fixed; inset: 0;
+  background: rgba(245,240,232,0.96);
+  z-index: 200;
+  align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+#success-screen.show { display: flex; }
+.success-card {
+  background: var(--paper2);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-lg);
+  padding: 44px 52px;
+  max-width: 520px; width: 90%;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+  animation: card-in 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes card-in { from { transform: scale(0.9) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+.success-icon { font-size: 3.5rem; margin-bottom: 16px; line-height: 1; }
+.success-title {
+  font-family: var(--font-mono);
+  font-size: 1.1rem; font-weight: 700;
+  color: var(--teal); letter-spacing: 2px;
+  margin-bottom: 10px;
+}
+.success-body { font-size: 1rem; color: var(--ink3); line-height: 1.65; margin-bottom: 20px; }
+.success-stats {
+  display: flex; gap: 14px; justify-content: center; margin: 18px 0;
+}
+.s-stat {
+  background: var(--paper);
+  border: 1px solid var(--ink3);
+  border-radius: var(--radius);
+  padding: 10px 16px; text-align: center;
+}
+.s-val { font-family: var(--font-mono); font-size: 1.1rem; font-weight: 700; color: var(--teal); display: block; }
+.s-lbl { font-size: 0.72rem; color: var(--ink4); }
+.close-success {
+  background: var(--ink); color: var(--paper);
+  border: none; border-radius: var(--radius);
+  font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 2px;
+  padding: 12px 24px; cursor: pointer;
+  transition: background 0.2s; margin-top: 8px;
+}
+.close-success:hover { background: var(--teal); }
+
+/* ═══════════════════════════════════════════════════════════════
+   FLASH CARD SCREEN
+═══════════════════════════════════════════════════════════════ */
+#flashcard-screen {
+  display: none; position: fixed; inset: 0;
+  background: var(--paper);
+  z-index: 300;
+  flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 24px;
+}
+#flashcard-screen.show { display: flex; }
+.fc-header {
+  font-family: var(--font-mono);
+  font-size: 0.75rem; letter-spacing: 3px; color: var(--ink4);
+  text-transform: uppercase;
+}
+.fc-card {
+  width: 420px; max-width: 90vw;
+  min-height: 200px;
+  background: var(--paper2);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-lg);
+  padding: 36px 36px;
+  cursor: pointer;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+  position: relative;
+  box-shadow: var(--shadow-lg);
+}
+.fc-card.flipped { transform: rotateY(180deg); }
+.fc-front, .fc-back {
+  position: absolute; inset: 0;
+  backface-visibility: hidden;
+  padding: 36px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; border-radius: var(--radius-lg);
+}
+.fc-back { transform: rotateY(180deg); background: var(--paper2); border-radius: var(--radius-lg); }
+.fc-type {
+  font-family: var(--font-mono);
+  font-size: 0.58rem; letter-spacing: 2px; color: var(--teal);
+  margin-bottom: 14px; text-transform: uppercase;
+}
+.fc-question { font-size: 1.1rem; line-height: 1.6; color: var(--ink); }
+.fc-answer   { font-size: 1rem; line-height: 1.6; color: var(--teal2); }
+.fc-hint { font-size: 0.75rem; color: var(--ink4); margin-top: 14px; font-family: var(--font-mono); }
+.fc-nav {
+  display: flex; align-items: center; gap: 16px;
+}
+.fc-btn {
+  background: var(--paper2); border: 1.5px solid var(--ink3);
+  color: var(--ink); border-radius: var(--radius);
+  font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 1px;
+  padding: 10px 18px; cursor: pointer; transition: all 0.2s;
+}
+.fc-btn:hover { background: var(--teal); color: var(--paper); border-color: var(--teal); }
+.fc-btn.primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.fc-btn.primary:hover { background: var(--teal); }
+.fc-counter { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink4); }
+.fc-close {
+  position: fixed; top: 20px; right: 20px;
+  background: transparent; border: 1.5px solid var(--ink3);
+  color: var(--ink4); border-radius: var(--radius);
+  font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 1px;
+  padding: 7px 13px; cursor: pointer; transition: all 0.2s;
+}
+.fc-close:hover { border-color: var(--ink); color: var(--ink); }
+
+/* ═══════════════════════════════════════════════════════════════
+   TRANSFER QUESTION SCREEN (Phase 4)
+═══════════════════════════════════════════════════════════════ */
+#transfer-screen {
+  display: none;
+  grid-column: 2; grid-row: 1;
+  background: var(--paper2);
+  border: 1.5px solid var(--ink3);
+  border-radius: var(--radius-lg);
+  padding: 28px 24px;
+  box-shadow: var(--shadow);
+}
+#transfer-screen.show { display: block; }
+
+.transfer-q {
+  font-size: 1.05rem; line-height: 1.7;
+  color: var(--ink2); margin-bottom: 24px;
+  border-left: 3px solid var(--amber);
+  padding-left: 14px;
+}
+.transfer-options { display: flex; flex-direction: column; gap: 10px; }
+.t-option {
+  background: var(--paper);
+  border: 1.5px solid var(--ink3);
+  border-radius: var(--radius);
+  padding: 13px 16px;
+  cursor: pointer; font-size: 0.92rem;
+  transition: all 0.2s; text-align: left;
+  display: flex; gap: 12px; align-items: flex-start;
+}
+.t-option:hover { border-color: var(--teal2); background: #f0f7f7; }
+.t-option .opt-letter {
+  font-family: var(--font-mono); font-size: 0.7rem;
+  color: var(--ink4); flex-shrink: 0; margin-top: 2px;
+}
+.t-option .opt-text { flex: 1; }
+.t-option.selected { border-color: var(--teal); background: #e8f5f5; }
+.t-option.selected .opt-letter { color: var(--teal); }
+
+.t-response {
+  display: none; margin-top: 18px;
+  background: var(--paper);
+  border-left: 3px solid var(--teal);
+  padding: 14px 16px;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  font-size: 0.9rem; line-height: 1.65; color: var(--ink2);
+}
+.t-response.show { display: block; animation: fade-in 0.3s ease; }
+@keyframes fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+.t-response strong { color: var(--teal2); }
+
+/* ═══════════════════════════════════════════════════════════════
+   EXERCISE PHASE ELEMENT SELECTOR
+═══════════════════════════════════════════════════════════════ */
+#exercise-selector {
+  display: none;
+  grid-column: 2 / 4; grid-row: 2;
+  background: var(--paper2);
+  border: 1.5px solid var(--ink3);
+  border-radius: var(--radius-lg);
+  padding: 20px; box-shadow: var(--shadow);
+  position: relative; z-index: 10;
+}
+#exercise-selector.show { display: block; }
+.ex-title {
+  font-family: var(--font-mono);
+  font-size: 0.65rem; letter-spacing: 3px; color: var(--ink4);
+  margin-bottom: 14px; text-transform: uppercase;
+}
+.element-grid { display: flex; gap: 10px; flex-wrap: wrap; }
+.element-btn {
+  background: var(--paper);
+  border: 1.5px solid var(--ink3);
+  border-radius: var(--radius);
+  padding: 10px 14px; cursor: pointer;
+  font-family: var(--font-mono); font-size: 0.75rem;
+  transition: all 0.2s; text-align: center; min-width: 80px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.element-btn:hover { border-color: var(--teal); background: #f0f7f7; }
+.element-btn.done { background: var(--green3); border-color: var(--green2); opacity: 0.6; pointer-events: none; }
+.element-btn.active { border-color: var(--amber); background: var(--amber3); }
+.el-symbol { font-size: 1.2rem; font-weight: 700; color: var(--ink); }
+.el-name   { font-size: 0.6rem; color: var(--ink4); }
+.el-num    { font-size: 0.6rem; color: var(--teal); }
+
+/* ═══════════════════════════════════════════════════════════════
+   SHAKE
+═══════════════════════════════════════════════════════════════ */
+@keyframes shake {
+  0%,100% { transform: translate(-50%,-50%); }
+  20%     { transform: translate(calc(-50% - 5px),-50%) rotate(-2deg); }
+  40%     { transform: translate(calc(-50% + 5px),-50%) rotate(2deg); }
+  60%     { transform: translate(calc(-50% - 3px),-50%) rotate(-1deg); }
+  80%     { transform: translate(calc(-50% + 3px),-50%) rotate(1deg); }
+}
+.shake { animation: shake 0.4s ease-in-out !important; }
+
+/* ═══════════════════════════════════════════════════════════════
+   ADD SHELL BUTTON
+═══════════════════════════════════════════════════════════════ */
+#add-shell-btn {
+  display: none; margin-top: 12px;
+  background: transparent;
+  border: 1.5px dashed var(--teal2);
+  color: var(--teal);
+  border-radius: var(--radius);
+  font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 1px;
+  padding: 8px 14px; cursor: pointer;
+  transition: all 0.2s;
+}
+#add-shell-btn:hover { background: var(--teal3); color: var(--ink); }
+#add-shell-btn.visible { display: block; }
+#remove-shell-btn {
+  display: none; margin-top: 6px;
+  background: transparent;
+  border: 1px dashed var(--red2);
+  color: var(--red2);
+  border-radius: var(--radius);
+  font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 1px;
+  padding: 6px 12px; cursor: pointer;
+  transition: all 0.2s;
+}
+#remove-shell-btn:hover { background: #ffe8e8; }
+#remove-shell-btn.visible { display: block; }
+
+/* ═══════════════════════════════════════════════════════════════
+   PHASE SCREEN TRANSITIONS
+═══════════════════════════════════════════════════════════════ */
+.screen { animation: screen-in 0.35s ease; }
+@keyframes screen-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* add-shell group (shown in exercise phase) */
+#shell-controls { display: none; flex-direction: column; align-items: center; margin-top: 8px; }
+#shell-controls.visible { display: flex; }
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE COMPACT
+═══════════════════════════════════════════════════════════════ */
+@media (max-width: 800px) {
+  #scene {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+  #npc-panel { grid-column: 1; grid-row: 1; position: static; }
+  #atom-stage, #transfer-screen { grid-column: 1; grid-row: 2; }
+  #particle-bank { grid-column: 1; grid-row: 3; }
+  #info-bar      { grid-column: 1; grid-row: 4; }
+  #exercise-selector { grid-column: 1; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   TTS CONTROLS
+═══════════════════════════════════════════════════════ */
+#tts-controls {
+  display: flex; align-items: center; gap: 7px;
+  margin-top: 8px; padding: 7px 10px;
+  background: var(--paper);
+  border: 1px solid var(--ink3);
+  border-radius: var(--radius);
+}
+#tts-play-btn {
+  width: 30px; height: 30px; flex-shrink: 0;
+  background: var(--teal);
+  border: none; border-radius: 50%;
+  color: var(--paper);
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s, transform 0.1s;
+  line-height: 1;
+}
+#tts-play-btn:hover { background: var(--teal2); transform: scale(1.05); }
+#tts-play-btn.speaking { background: var(--amber); }
+#tts-play-btn.speaking:hover { background: var(--amber2); }
+#tts-progress {
+  flex: 1; height: 3px;
+  background: var(--paper3);
+  border-radius: 2px; overflow: hidden;
+}
+#tts-progress-fill {
+  height: 100%;
+  background: var(--teal2);
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.15s linear;
+}
+#tts-speed-btn {
+  background: transparent;
+  border: 1px solid var(--ink4);
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 0.55rem; color: var(--ink4);
+  padding: 3px 6px; cursor: pointer;
+  transition: all 0.2s; white-space: nowrap;
+  flex-shrink: 0;
+}
+#tts-speed-btn:hover { border-color: var(--teal); color: var(--teal); }
+#tts-mute-btn {
+  background: transparent; border: none;
+  font-size: 0.9rem; cursor: pointer;
+  opacity: 0.55; transition: opacity 0.2s; flex-shrink: 0;
+  line-height: 1; padding: 2px;
+}
+#tts-mute-btn:hover { opacity: 1; }
+#tts-mute-btn.muted { opacity: 0.25; }
+/* Pulse ring on NPC avatar when speaking */
+.npc-avatar.speaking::after {
+  content: '';
+  position: absolute; inset: -6px;
+  border-radius: 50%;
+  border: 2px solid var(--teal2);
+  animation: speak-ring 1.2s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes speak-ring {
+  0%   { opacity: 0.7; transform: scale(0.95); }
+  50%  { opacity: 0.2; transform: scale(1.05); }
+  100% { opacity: 0.7; transform: scale(0.95); }
+}
+
+/* ═══════════════════════════════════════════════════════
+   CINEMATIC DIALOG PANEL
+═══════════════════════════════════════════════════════ */
+#cinematic-dialog {
+  display: none;
+  flex-direction: column;
+  background: var(--paper2);
+  border: 1.5px solid var(--ink3);
+  border-radius: var(--radius-lg);
+  padding: 32px 36px;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+  min-height: 340px;
+  animation: screen-in 0.4s ease;
+}
+#cinematic-dialog::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--teal2), var(--amber), var(--teal2));
+  background-size: 200% 100%;
+  animation: shimmer 3s linear infinite;
+}
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.cd-speaker {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 20px;
+}
+.cd-speaker-name {
+  font-family: var(--font-mono);
+  font-size: 0.7rem; letter-spacing: 2px;
+  color: var(--teal); font-weight: 700;
+}
+.cd-speaker-role {
+  font-size: 0.8rem; color: var(--ink4); font-style: italic;
+}
+.cd-wave {
+  display: flex; gap: 2px; align-items: flex-end; height: 12px; margin-left: 4px;
+}
+.cd-wave span {
+  width: 3px; background: var(--teal2); border-radius: 2px; height: 3px;
+}
+.cd-wave.talking span:nth-child(1) { animation: sw 0.7s 0.0s ease-in-out infinite alternate; }
+.cd-wave.talking span:nth-child(2) { animation: sw 0.7s 0.12s ease-in-out infinite alternate; }
+.cd-wave.talking span:nth-child(3) { animation: sw 0.7s 0.24s ease-in-out infinite alternate; }
+.cd-wave.talking span:nth-child(4) { animation: sw 0.7s 0.08s ease-in-out infinite alternate; }
+
+#cinematic-text {
+  font-size: 1.2rem;
+  line-height: 1.85;
+  color: var(--ink);
+  flex: 1;
+  position: relative;
+}
+#cinematic-text::before {
+  content: '"';
+  position: absolute; top: -14px; left: -10px;
+  font-size: 4rem; color: var(--ink4); opacity: 0.1;
+  font-family: Georgia, serif; line-height: 1; pointer-events: none;
+}
+#cinematic-text strong { color: var(--teal2); }
+#cinematic-text em     { color: var(--amber); font-style: normal; font-weight: 600; }
+
+.cd-controls {
+  display: flex; align-items: center; gap: 10px;
+  margin-top: 24px; padding-top: 16px;
+  border-top: 1px solid var(--paper3);
+}
+.cd-tts-row {
+  display: flex; align-items: center; gap: 8px; flex: 1;
+}
+.cd-next-btn {
+  background: var(--ink); color: var(--paper);
+  border: none; border-radius: var(--radius);
+  font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 2px;
+  padding: 11px 20px; cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  white-space: nowrap;
+}
+.cd-next-btn:hover:not(:disabled) { background: var(--teal); transform: translateY(-1px); }
+.cd-next-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.cd-progress {
+  flex: 1; height: 3px; background: var(--paper3); border-radius: 2px; overflow: hidden;
+}
+.cd-progress-fill {
+  height: 100%; background: var(--teal2); border-radius: 2px;
+  width: 0%; transition: width 0.15s linear;
+}
+.cd-speed-btn {
+  background: transparent; border: 1px solid var(--ink4); border-radius: 3px;
+  font-family: var(--font-mono); font-size: 0.55rem; color: var(--ink4);
+  padding: 3px 6px; cursor: pointer; transition: all 0.2s;
+}
+.cd-speed-btn:hover { border-color: var(--teal); color: var(--teal); }
+.cd-mute-btn {
+  background: transparent; border: none; font-size: 0.9rem;
+  cursor: pointer; opacity: 0.55; transition: opacity 0.2s; line-height: 1; padding: 2px;
+}
+.cd-mute-btn:hover { opacity: 1; }
+.cd-mute-btn.muted { opacity: 0.25; }
+
+/* step pip row in cinematic */
+.cd-pips {
+  display: flex; gap: 4px; margin-left: auto;
+}
+.cd-pip {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--ink4); opacity: 0.3; transition: all 0.3s;
+}
+.cd-pip.done   { background: var(--teal); opacity: 1; }
+.cd-pip.active { background: var(--amber); opacity: 1; width: 14px; border-radius: 3px; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+  <header>
+    <div class="wordmark">ATOM<span>WELT</span></div>
+    <div class="breadcrumb">
+      <div class="path-dots" id="path-dots"></div>
+      <span class="sep">·</span>
+      <span class="current">Szene 5: Bohr</span>
+    </div>
+  </header>
+
+  <!-- MAIN SCENE -->
+  <div id="scene">
+
+    <!-- NPC PANEL -->
+    <div id="npc-panel">
+      <div class="npc-label">Dein Guide</div>
+      <div class="npc-name">Prof. Stinki</div>
+      <div class="npc-avatar">
+        <!-- NPC SVG – Skunk Prof. Stinki -->
+        <svg viewBox="0 0 120 135" xmlns="http://www.w3.org/2000/svg" overflow="visible">
+
+          <!-- ── TAIL (behind body) ── -->
+          <path d="M 72 105 Q 105 90 108 60 Q 112 35 95 22 Q 105 38 100 58 Q 96 80 68 98 Z"
+                fill="#1a1a1a"/>
+          <!-- white tail stripe -->
+          <path d="M 80 100 Q 108 82 107 55 Q 108 42 100 30 Q 104 45 100 62 Q 96 80 74 97 Z"
+                fill="white"/>
+
+          <!-- ── BODY (lab coat) ── -->
+          <ellipse cx="60" cy="100" rx="30" ry="26" fill="#e8e0d0"/>
+          <!-- coat lapels -->
+          <polygon points="48,80 60,92 60,80" fill="#d0c8b8"/>
+          <polygon points="72,80 60,92 60,80" fill="#d0c8b8"/>
+          <!-- coat center line -->
+          <line x1="60" y1="92" x2="60" y2="124" stroke="#c8c0b0" stroke-width="1"/>
+          <!-- belly white patch (skunk trait) -->
+          <ellipse cx="60" cy="105" rx="14" ry="16" fill="white" opacity="0.55"/>
+
+          <!-- ── ARMS ── -->
+          <!-- left arm -->
+          <path d="M 32 90 Q 20 95 18 108 Q 22 112 28 106 Q 30 96 38 92 Z" fill="#1a1a1a"/>
+          <!-- right arm holding clipboard -->
+          <path d="M 88 90 Q 100 95 102 108 Q 98 112 92 106 Q 90 96 82 92 Z" fill="#1a1a1a"/>
+          <!-- clipboard -->
+          <rect x="94" y="93" width="18" height="22" rx="2" fill="#d4c89a" stroke="#a09060" stroke-width="1"/>
+          <rect x="96" y="97" width="14" height="1.5" rx="1" fill="#a09060" opacity="0.6"/>
+          <rect x="96" y="101" width="14" height="1.5" rx="1" fill="#a09060" opacity="0.6"/>
+          <rect x="96" y="105" width="10" height="1.5" rx="1" fill="#a09060" opacity="0.6"/>
+          <rect x="101" y="90" width="6" height="6" rx="1" fill="#8a7840"/>
+
+          <!-- ── NECK ── -->
+          <ellipse cx="60" cy="72" rx="9" ry="7" fill="#2a2a2a"/>
+
+          <!-- ── HEAD ── -->
+          <!-- main head – black -->
+          <ellipse cx="60" cy="50" rx="24" ry="24" fill="#1a1a1a"/>
+          <!-- white forehead blaze (skunk stripe) -->
+          <path d="M 52 28 Q 60 22 68 28 Q 65 38 60 42 Q 55 38 52 28 Z" fill="white"/>
+          <!-- white muzzle -->
+          <ellipse cx="60" cy="58" rx="11" ry="9" fill="white"/>
+          <!-- nose -->
+          <ellipse cx="60" cy="54" rx="4.5" ry="3" fill="#1a1a1a"/>
+          <ellipse cx="60" cy="53.5" rx="3" ry="1.8" fill="#2d1a2a"/>
+          <!-- nostrils -->
+          <circle cx="58.5" cy="54" r="0.8" fill="#0a0a0a"/>
+          <circle cx="61.5" cy="54" r="0.8" fill="#0a0a0a"/>
+
+          <!-- ── EYES ── -->
+          <!-- eye whites -->
+          <ellipse cx="49" cy="47" rx="6.5" ry="6.5" fill="white"/>
+          <ellipse cx="71" cy="47" rx="6.5" ry="6.5" fill="white"/>
+          <!-- irises – big, expressive -->
+          <circle cx="50" cy="48" r="4.2" fill="#3a7a3a" id="iris-l"/>
+          <circle cx="72" cy="48" r="4.2" fill="#3a7a3a" id="iris-r"/>
+          <!-- pupils -->
+          <circle cx="50.5" cy="48.5" r="2.2" fill="#0a0a0a"/>
+          <circle cx="72.5" cy="48.5" r="2.2" fill="#0a0a0a"/>
+          <!-- eye shine -->
+          <circle cx="51.5" cy="47" r="0.9" fill="white"/>
+          <circle cx="73.5" cy="47" r="0.9" fill="white"/>
+
+          <!-- ── EARS (round skunk ears) ── -->
+          <circle cx="38" cy="32" r="8" fill="#1a1a1a"/>
+          <circle cx="38" cy="32" r="5" fill="#2a1a1a"/>
+          <circle cx="82" cy="32" r="8" fill="#1a1a1a"/>
+          <circle cx="82" cy="32" r="5" fill="#2a1a1a"/>
+
+          <!-- ── GLASSES (small, round, nerdy) ── -->
+          <circle cx="49" cy="47" r="7" fill="none" stroke="#7a9aaa" stroke-width="1.6"/>
+          <circle cx="71" cy="47" r="7" fill="none" stroke="#7a9aaa" stroke-width="1.6"/>
+          <line x1="56" y1="47" x2="64" y2="47" stroke="#7a9aaa" stroke-width="1.5"/>
+          <line x1="30" y1="45" x2="42" y2="46" stroke="#7a9aaa" stroke-width="1.3"/>
+          <line x1="78" y1="46" x2="90" y2="45" stroke="#7a9aaa" stroke-width="1.3"/>
+
+          <!-- ── MOUTH ── -->
+          <path d="M 54 62 Q 60 67 66 62" stroke="#888" stroke-width="1.4"
+                fill="none" stroke-linecap="round" id="npc-mouth"/>
+
+          <!-- ── ATOM PIN on coat ── -->
+          <circle cx="42" cy="98" r="5" fill="none" stroke="#1a6b6b" stroke-width="1.2"/>
+          <ellipse cx="42" cy="98" rx="5" ry="2" fill="none" stroke="#1a6b6b" stroke-width="1"
+                   transform="rotate(60,42,98)"/>
+          <circle cx="42" cy="98" r="1.2" fill="#1a6b6b"/>
+
+          <!-- ── SMELL LINES (animated) ── -->
+          <g opacity="0.35">
+            <path d="M 10 55 Q 14 50 10 45 Q 6 40 10 35" stroke="#4a8a4a"
+                  stroke-width="1.5" fill="none" stroke-linecap="round">
+              <animate attributeName="opacity" values="0.35;0.7;0.35" dur="2.5s" repeatCount="indefinite"/>
+            </path>
+            <path d="M 5 60 Q 9 54 5 48 Q 1 42 5 36" stroke="#4a8a4a"
+                  stroke-width="1.2" fill="none" stroke-linecap="round">
+              <animate attributeName="opacity" values="0.2;0.5;0.2" dur="2.5s" begin="0.4s" repeatCount="indefinite"/>
+            </path>
+          </g>
+
+          <!-- ── FLOATING PARTICLES ── -->
+          <circle cx="112" cy="42" r="2.5" fill="#c47a1e" opacity="0.6">
+            <animate attributeName="cy" values="42;36;42" dur="2.2s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.6;1;0.6" dur="2.2s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="108" cy="70" r="2" fill="#1a6b6b" opacity="0.5">
+            <animate attributeName="cy" values="70;64;70" dur="3s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="116" cy="25" r="3" fill="#8b2020" opacity="0.35">
+            <animate attributeName="cx" values="116;121;116" dur="2.8s" repeatCount="indefinite"/>
+          </circle>
+        </svg>
+      </div>
+
+      <div class="speech-wave" id="speech-wave">
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+
+      <div id="dialog-bubble">
+        <div id="dialog-text">Lade...</div>
+      </div>
+
+      <button id="next-btn" disabled>WEITER ▶</button>
+      <button id="hint-btn">💡 HINWEIS (einmalig)</button>
+      <!-- TTS Controls -->
+      <div id="tts-controls">
+        <button id="tts-mute-btn" title="Stumm schalten">🔊</button>
+        <button id="tts-play-btn" title="Vorlesen / Pause">▶</button>
+        <div id="tts-progress"><div id="tts-progress-fill"></div></div>
+        <button id="tts-speed-btn" title="Geschwindigkeit">1.0×</button>
+      </div>
+
+      <div class="step-track" id="step-track"></div>
+    </div>
+
+    <!-- ATOM STAGE -->
+    <div id="atom-stage" class="screen">
+      <div class="stage-header">
+        <div class="stage-title">◈ Atom-Baukasten</div>
+        <div id="element-badge"></div>
+      </div>
+      <div id="atom-canvas">
+        <div id="nucleus-drop"></div>
+        <div id="nucleus">
+          <div id="nucleus-label">KERN</div>
+        </div>
+        <!-- orbits + electrons added dynamically -->
+      </div>
+      <div id="shell-controls">
+        <button id="add-shell-btn">+ Schale hinzufügen</button>
+        <button id="remove-shell-btn">− Schale entfernen</button>
+      </div>
+    </div>
+
+
+    <!-- CINEMATIC DIALOG (hook + input phases) -->
+    <div id="cinematic-dialog">
+      <div class="cd-speaker">
+        <div>
+          <div class="cd-speaker-name">PROF. STINKI</div>
+          <div class="cd-speaker-role">Quantenphysiker · Stinktier</div>
+        </div>
+        <div class="cd-wave" id="cd-wave">
+          <span></span><span></span><span></span><span></span>
+        </div>
+        <div class="cd-pips" id="cd-pips"></div>
+      </div>
+      <div id="cinematic-text"></div>
+      <div class="cd-controls">
+        <div class="cd-tts-row">
+          <button class="cd-mute-btn" id="cd-mute-btn" title="Stumm">🔊</button>
+          <button id="cd-play-btn" style="width:28px;height:28px;flex-shrink:0;background:var(--teal);border:none;border-radius:50%;color:var(--paper);font-size:0.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s;" title="Vorlesen">▶</button>
+          <div class="cd-progress"><div class="cd-progress-fill" id="cd-progress-fill"></div></div>
+          <button class="cd-speed-btn" id="cd-speed-btn">1.0×</button>
+        </div>
+        <button class="cd-next-btn" id="cd-next-btn" disabled>WEITER ▶</button>
+      </div>
+    </div>
+
+    <!-- TRANSFER SCREEN (Phase 4) -->
+    <div id="transfer-screen"></div>
+
+    <!-- EXERCISE SELECTOR -->
+    <div id="exercise-selector"></div>
+
+    <!-- PARTICLE BANK -->
+    <div id="particle-bank">
+      <div class="bank-title">Teilchen</div>
+      <div class="particle-group">
+        <div class="p-group-label">Protonen</div>
+        <div id="proton-tokens"></div>
+      </div>
+      <div class="particle-group">
+        <div class="p-group-label">Neutronen</div>
+        <div id="neutron-tokens"></div>
+      </div>
+      <div class="particle-group">
+        <div class="p-group-label">Elektronen</div>
+        <div id="electron-tokens"></div>
+      </div>
+      <div id="element-card"></div>
+    </div>
+
+    <!-- INFO BAR -->
+    <div id="info-bar">
+      <div class="mission-row">
+        <span class="mission-tag">✦ Aufgabe</span>
+        <span id="mission-text">Willkommen – lies die Einleitung.</span>
+        <span id="mission-badge">BEREIT</span>
+      </div>
+      <div id="fact-cards">
+        <div class="fact-card" id="fc-kern">
+          <div class="fact-title">⊙ Atomkern</div>
+          <div class="fact-body">Enthält <strong>Protonen</strong> (positiv) und <strong>Neutronen</strong> (neutral). <em>Ordnungszahl</em> = Protonenanzahl. <em>Massenzahl</em> = Protonen + Neutronen.</div>
+        </div>
+        <div class="fact-card" id="fc-schalen">
+          <div class="fact-title">◎ Elektronenschalen</div>
+          <div class="fact-body">Schalen K, L, M … — Kapazität: <strong>z = 2·n²</strong>. K: max. 2, L: max. 8, M: max. 18. Besetzung von <em>innen nach außen</em>.</div>
+        </div>
+        <div class="fact-card" id="fc-perioden">
+          <div class="fact-title">⊞ Periodensystem</div>
+          <div class="fact-body">Periode = Anzahl besetzter Schalen. Hauptgruppe = Anzahl der <strong>Außenelektronen</strong> (Valenzelektronen).</div>
+        </div>
+        <div class="fact-card" id="fc-bohr">
+          <div class="fact-title">⬡ Bohrs Postulat 1913</div>
+          <div class="fact-body">Elektronen nur auf <strong>erlaubten Bahnen</strong> — keine Energieabstrahlung auf der Bahn. Atome sind <em>stabil</em>.</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /scene -->
+</div><!-- /app -->
+
+<!-- FEEDBACK TOAST -->
+<div id="feedback-toast"></div>
+
+<!-- SUCCESS OVERLAY -->
+<div id="success-screen">
+  <div class="success-card">
+    <div class="success-icon" id="s-icon">⚛️</div>
+    <div class="success-title" id="s-title">ATOM GEBAUT!</div>
+    <div class="success-body"  id="s-body"></div>
+    <div class="success-stats" id="s-stats"></div>
+    <div class="success-body"  id="s-body2"></div>
+    <button class="close-success" id="close-success">WEITER →</button>
+  </div>
+</div>
+
+<!-- FLASHCARD SCREEN -->
+<div id="flashcard-screen">
+  <button class="fc-close" id="fc-close">✕ SCHLIESSEN</button>
+  <div class="fc-header">Lernkarten — Spaced Repetition</div>
+  <div class="fc-card" id="fc-card">
+    <div class="fc-front">
+      <div class="fc-type" id="fc-type"></div>
+      <div class="fc-question" id="fc-question"></div>
+      <div class="fc-hint">Klicken zum Umdrehen</div>
+    </div>
+    <div class="fc-back">
+      <div class="fc-type" id="fc-type-b">Antwort</div>
+      <div class="fc-answer" id="fc-answer"></div>
+    </div>
+  </div>
+  <div class="fc-nav">
+    <button class="fc-btn" id="fc-prev">← Zurück</button>
+    <span class="fc-counter" id="fc-counter">1 / 10</span>
+    <button class="fc-btn primary" id="fc-next">Nächste →</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+//  ATOMWELT — Szene 5: Das Bohrsche Atommodell
+//  Vollständige Anwendungslogik
+// ═══════════════════════════════════════════════════════════════════════
+
+'use strict';
+
+// ── DIALOG SCRIPT ──────────────────────────────────────────────────────────
+const SCRIPT = [
+  // PHASE 1 – HOOK
+  {
+    id: 'hook-1',
+    phase: 'hook',
+    text: 'Du erinnerst dich an Rutherford. Kleiner Kern in der Mitte, Elektronen irgendwo außen. Für 1911 war das revolutionär.\n\nAber Rutherfords Modell hatte ein Problem. Ein ziemlich ernstes.',
+    mission: 'Lies die Einleitung von Prof. Stinki.',
+    badge: 'LESEN',
+    cards: [],
+    unlock: null,
+    nextLabel: 'WEITER ▶',
+  },
+  {
+    id: 'hook-2',
+    phase: 'hook',
+    text: 'Nach den Gesetzen der klassischen Physik müsste ein Elektron, das um den Kern kreist, <strong>ständig Energie abstrahlen</strong> – wie eine Antenne, die sendet.\n\nEs würde langsamer werden. Langsamer. Und schließlich <strong>in den Kern stürzen</strong>.\n\nIn etwa <em>0,000000000001 Sekunden</em>.\n\nAtome sollten gar nicht existieren dürfen.',
+    mission: 'Das Problem: Warum existieren Atome überhaupt?',
+    badge: 'LESEN',
+    cards: [],
+    unlock: null,
+    nextLabel: 'WEITER ▶',
+  },
+  {
+    id: 'hook-3',
+    phase: 'hook',
+    text: 'Aber sie existieren. Du existierst. Dieser Tisch existiert.\n\nIrgendwas stimmt an Rutherfords Modell nicht – oder zumindest fehlt etwas.\n\nEin junger dänischer Physiker hat 1913 eine Antwort vorgeschlagen. Sein Name: <strong>Niels Bohr</strong>.\n\nWas hat er anders gemacht?',
+    mission: 'Das will ich wissen — klicke weiter.',
+    badge: 'LESEN',
+    cards: [],
+    unlock: null,
+    nextLabel: 'DAS WILL ICH WISSEN ▶',
+  },
+  // PHASE 2 – INPUT
+  {
+    id: 'input-1',
+    phase: 'input',
+    text: 'Bohr hat etwas Radikales getan: Er hat die klassische Physik einfach <strong>außer Kraft gesetzt</strong>.\n\nSein Postulat: Elektronen dürfen sich nur auf <strong>ganz bestimmten Bahnen</strong> bewegen. Nicht irgendwo. Nicht dazwischen.\n\nUnd solange ein Elektron auf einer dieser Bahnen ist, <strong>strahlt es keine Energie ab</strong>. Warum? Das konnte Bohr selbst nicht vollständig erklären. Aber das Modell hat funktioniert.',
+    mission: 'Bohrs Kernidee: erlaubte Bahnen, keine Energieabstrahlung.',
+    badge: 'INPUT',
+    cards: ['fc-bohr'],
+    unlock: null,
+    nextLabel: 'WEITER ▶',
+  },
+  {
+    id: 'input-2',
+    phase: 'input',
+    text: 'Diese erlaubten Bahnen nennen wir <strong>Schalen</strong>. Von innen nach außen: <em>K, L, M, N …</em>\n\nJede Schale fasst eine begrenzte Zahl von Elektronen. Die Formel: <strong>z = 2·n²</strong>\n\nK-Schale: 2·1² = <strong>2 Elektronen</strong>\nL-Schale: 2·2² = <strong>8 Elektronen</strong>\nM-Schale: 2·3² = <strong>18 Elektronen</strong>\n\nBesetzt wird immer <strong>von innen nach außen</strong>.',
+    mission: 'Schalen K, L, M — Formel z = 2·n²',
+    badge: 'INPUT',
+    cards: ['fc-schalen'],
+    unlock: null,
+    nextLabel: 'WEITER ▶',
+  },
+  {
+    id: 'input-3',
+    phase: 'input',
+    text: 'Die Elektronen auf der äußersten Schale heißen <strong>Außenelektronen</strong> (Valenzelektronen). Sie bestimmen das chemische Verhalten.\n\nDeshalb stehen Elemente mit gleicher Außenelektronenzahl in derselben <strong>Hauptgruppe</strong> im Periodensystem.\n\nUnd die Anzahl der besetzten Schalen entspricht der <strong>Periode</strong>.\n\nPeriode 1 – eine Schale. Periode 2 – zwei Schalen. Periode 3 – drei Schalen.',
+    mission: 'Periode = Schalenanzahl. Hauptgruppe = Außenelektronen.',
+    badge: 'INPUT',
+    cards: ['fc-schalen', 'fc-perioden'],
+    unlock: null,
+    nextLabel: 'WEITER ▶',
+  },
+  {
+    id: 'input-4',
+    phase: 'input',
+    text: 'Im Kern sitzen <strong>Protonen</strong> – positiv geladen. Die Anzahl der Protonen heißt <strong>Ordnungszahl</strong> und bestimmt das Element.\n\nDazu kommen <strong>Neutronen</strong> – neutral, aber sie tragen zur Masse bei. Protonen + Neutronen = <strong>Massenzahl</strong>.\n\nEin Atom ist nach außen <em>neutral</em> – also gibt es immer gleich viele Elektronen wie Protonen.',
+    mission: 'Ordnungszahl, Massenzahl, Rumpfelektronen.',
+    badge: 'INPUT',
+    cards: ['fc-kern', 'fc-schalen'],
+    unlock: null,
+    nextLabel: 'WEITER ▶',
+  },
+  // input-5 is the animated build (2.4a–e), handled specially
+  {
+    id: 'input-5a',
+    phase: 'input-anim',
+    sub: 0,
+    text: 'Schauen wir uns <strong>Kohlenstoff</strong> an. Symbol: <em>C</em>.',
+    mission: 'Kohlenstoff – Schritt für Schritt aufgebaut.',
+    badge: 'DEMO',
+    cards: ['fc-kern'],
+    unlock: null,
+    nextLabel: 'WEITER ▶',
+    anim: { type: 'show-nucleus' },
+  },
+  {
+    id: 'input-5b',
+    phase: 'input-anim',
+    sub: 1,
+    text: 'Ordnungszahl: <em>6</em>. Das heißt: <strong>6 Protonen</strong> im Kern.',
+    mission: '6 Protonen im Kern.',
+    badge: 'DEMO',
+    cards: ['fc-kern'],
+    unlock: null,
+    nextLabel: 'WEITER ▶',
+    anim: { type: 'add-protons', count: 6 },
+  },
+  {
+    id: 'input-5c',
+    phase: 'input-anim',
+    sub: 2,
+    text: 'Kohlenstoff-12 hat Massenzahl 12. Massenzahl = Protonen + Neutronen. Also: 12 − 6 = <strong>6 Neutronen</strong>.',
+    mission: '6 Neutronen in den Kern.',
+    badge: 'DEMO',
+    cards: ['fc-kern'],
+    unlock: null,
+    nextLabel: 'WEITER ▶',
+    anim: { type: 'add-neutrons', count: 6 },
+  },
+  {
+    id: 'input-5d',
+    phase: 'input-anim',
+    sub: 3,
+    text: 'Ein Atom ist neutral – also <strong>6 Elektronen</strong> in der Hülle. Erst die K-Schale füllen (2), dann die L-Schale (4).',
+    mission: '2 Elektronen auf K, 4 auf L.',
+    badge: 'DEMO',
+    cards: ['fc-schalen'],
+    unlock: null,
+    nextLabel: 'WEITER ▶',
+    anim: { type: 'add-electrons', shell1: 2, shell2: 4 },
+  },
+  {
+    id: 'input-5e',
+    phase: 'input-anim',
+    sub: 4,
+    text: 'Das ist <strong>Kohlenstoff-12</strong> nach Bohr. 6 Protonen, 6 Neutronen, 2 + 4 Elektronen.\n\nJetzt bist du dran — <em>bau es selbst</em>. Ohne Vorlage.',
+    mission: 'Verstanden! Jetzt selbst bauen.',
+    badge: 'BEREIT',
+    cards: ['fc-kern', 'fc-schalen'],
+    unlock: null,
+    nextLabel: 'AUFGABE STARTEN ▶',
+    anim: { type: 'fade-demo' },
+  },
+  // PHASE 3 – MAIN TASK (Carbon)
+  {
+    id: 'task-carbon',
+    phase: 'task',
+    element: 'C',
+    text: '<strong>Deine Aufgabe:</strong> Baue ein Kohlenstoff-12-Atom nach dem Bohrschen Modell.\n\nDu weißt, was du brauchst.',
+    mission: 'Baue Kohlenstoff-12: 6p, 6n, 6e⁻',
+    badge: 'AKTIV',
+    cards: ['fc-kern', 'fc-schalen'],
+    unlock: 'carbon',
+    nextLabel: 'WEITER ▶',
+    hint: 'Du brauchst: 6 Protonen und 6 Neutronen im Kern. 6 Elektronen in der Hülle – erst K-Schale (2), dann L-Schale (4).',
+  },
+  // PHASE 3b – EXERCISE (5 elements)
+  {
+    id: 'exercise-intro',
+    phase: 'exercise-intro',
+    text: 'Jetzt bist du dran – ohne Vorlage.\n\nDu bekommst fünf Elemente. Alles, was du brauchst, steht im Periodensystem. Wie viele Schalen du brauchst, sage ich dir nicht. Das musst du selbst herausfinden.',
+    mission: 'Fünf Elemente warten auf dich.',
+    badge: 'ÜBUNG',
+    cards: ['fc-kern', 'fc-schalen', 'fc-perioden'],
+    unlock: null,
+    nextLabel: 'LOS ▶',
+  },
+  // exercise steps are handled dynamically
+  // PHASE 4 – TRANSFER
+  {
+    id: 'transfer',
+    phase: 'transfer',
+    text: 'Fünf Atome. Drei Perioden. Immer dasselbe Modell.\n\nJetzt eine letzte Frage – bevor diese Szene endet.',
+    mission: 'Letzte Frage: Transfer und Ausblick.',
+    badge: 'TRANSFER',
+    cards: ['fc-bohr'],
+    unlock: null,
+    nextLabel: 'WEITER ▶',
+  },
+  {
+    id: 'cliffhanger',
+    phase: 'cliffhanger',
+    text: 'Diese Sprünge zwischen Schalen – <strong>Quantensprünge</strong> – erklären, warum Natrium gelb leuchtet, Neon rot-orange, Quecksilber blau-weiß.\n\nBohrs Modell kann erklären, <em>dass</em> diese Sprünge passieren. Aber nicht <em>warum</em> Elektronen auf Schalen bleiben.\n\nDafür braucht man etwas, das die Physik 1913 noch nicht kannte.\n\n<strong>Quantenmechanik.</strong>',
+    mission: 'Szene abgeschlossen. Lernkarten warten.',
+    badge: '✓ FERTIG',
+    cards: ['fc-bohr', 'fc-kern', 'fc-schalen', 'fc-perioden'],
+    unlock: null,
+    nextLabel: 'LERNKARTEN ANSEHEN ▶',
+  },
+];
+
+// ── ELEMENTS DATA ───────────────────────────────────────────────────────────
+const ELEMENTS = {
+  C:  { name: 'Kohlenstoff', oz: 6,  mz: 12, shells: [2,4], period: 2, group: 4 },
+  H:  { name: 'Wasserstoff', oz: 1,  mz: 1,  shells: [1],   period: 1, group: 1 },
+  He: { name: 'Helium',      oz: 2,  mz: 4,  shells: [2],   period: 1, group: 8 },
+  Li: { name: 'Lithium',     oz: 3,  mz: 7,  shells: [2,1], period: 2, group: 1 },
+  O:  { name: 'Sauerstoff',  oz: 8,  mz: 16, shells: [2,6], period: 2, group: 6 },
+  Al: { name: 'Aluminium',   oz: 13, mz: 27, shells: [2,8,3], period: 3, group: 3 },
+};
+
+const EXERCISE_ORDER = ['H','He','Li','O','Al'];
+
+const SHELL_MAX = [0, 2, 8, 18]; // index 1=K, 2=L, 3=M
+const SHELL_NAMES = ['', 'K', 'L', 'M'];
+const ORBIT_RADII = [0, 80, 130, 175];
+const ORBIT_SPEEDS = [0, 3, 5, 7];
+
+// ── FEEDBACK TEXTS ──────────────────────────────────────────────────────────
+const FEEDBACK = {
+  electron_in_nucleus:  'Elektronen gehören nicht in den Kern. Im Kern sitzen nur Protonen und Neutronen.',
+  proton_on_shell:      'Protonen gehören in den Kern, nicht auf eine Schale.',
+  neutron_on_shell:     'Neutronen gehören in den Kern, nicht auf eine Schale.',
+  k_shell_full:         'Die K-Schale ist voll (max. 2 Elektronen). Die nächsten Elektronen müssen auf die L-Schale.',
+  l_shell_full:         'Die L-Schale ist voll (max. 8 Elektronen).',
+  m_shell_full:         'Die M-Schale ist voll (max. 18 Elektronen).',
+  fill_k_first:         'Elektronen besetzen immer die innerste freie Schale zuerst. Fülle erst die K-Schale.',
+  fill_l_first:         'Die L-Schale ist noch nicht voll. Fülle erst die L-Schale.',
+  too_many_protons:     (el) => `${ELEMENTS[el].name} hat die Ordnungszahl ${ELEMENTS[el].oz} – genau ${ELEMENTS[el].oz} Protonen. Mehr würden das Element verändern.`,
+  too_many_neutrons:    (el) => `${ELEMENTS[el].name}-${ELEMENTS[el].mz} hat genau ${ELEMENTS[el].mz - ELEMENTS[el].oz} Neutronen.`,
+  not_unlocked:         'Warte auf die Anweisung von Prof. Stinki.',
+  too_many_shells:      'Eine leere Schale außen macht keinen Sinn – Elektronen besetzen nur Schalen, die sie brauchen.',
+  add_shell_needed:     'Du hast mehr Elektronen als diese Schale(n) fassen können. Füge eine weitere Schale hinzu.',
+};
+
+const ELEMENT_COMPLETE_FEEDBACK = {
+  H:  'Wasserstoff ist das einfachste Atom: 1 Proton, kein Neutron, 1 Elektron. Die K-Schale ist nicht voll – deshalb ist Wasserstoff so reaktionsfreudig.',
+  He: 'Helium hat eine volle K-Schale – das ist eine Edelgaskonfiguration. Deshalb geht Helium keine Verbindungen ein.',
+  Li: 'Lithium braucht zwei Schalen. Das eine Valenzelektron auf der L-Schale lässt sich leicht abspalten – daher ist Lithium so reaktiv. Periode 2, Hauptgruppe I.',
+  O:  'Sauerstoff hat 6 Elektronen auf der L-Schale – 2 fehlen zur Edelgaskonfiguration. Dieser "Hunger" treibt die Reaktivität. Hauptgruppe VI.',
+  Al: 'Aluminium – erste 3-Schalen-Aufgabe! Periode 3, Hauptgruppe III – 3 Valenzelektronen auf der M-Schale. K und L sind Rumpfelektronen.',
+};
+
+// ── FLASHCARDS ───────────────────────────────────────────────────────────────
+const FLASHCARDS = [
+  { type: 'Begriff',     q: 'Was ist die Ordnungszahl?',                   a: 'Anzahl der Protonen im Kern – bestimmt das Element eindeutig.' },
+  { type: 'Begriff',     q: 'Was ist die Massenzahl?',                     a: 'Anzahl der Protonen + Neutronen im Kern.' },
+  { type: 'Begriff',     q: 'Was sind Valenzelektronen?',                  a: 'Elektronen auf der äußersten besetzten Schale. Sie bestimmen das chemische Verhalten.' },
+  { type: 'Begriff',     q: 'Was sind Rumpfelektronen?',                   a: 'Elektronen auf den vollständig besetzten inneren Schalen – chemisch abgeschirmt.' },
+  { type: 'Begriff',     q: 'Was ist die Ionisierungsenergie?',            a: 'Energie, die nötig ist, um ein Elektron vollständig aus dem Atom zu entfernen.' },
+  { type: 'Begriff',     q: 'Was ist ein Quantensprung?',                  a: 'Wechsel eines Elektrons zwischen Schalen unter Aufnahme oder Abgabe von Energie (Licht).' },
+  { type: 'Regel',       q: 'Wie berechnet man die maximale Elektronenzahl einer Schale?', a: 'z = 2·n²  (n = Schalennummer)\nK: 2 · L: 8 · M: 18' },
+  { type: 'Regel',       q: 'In welcher Reihenfolge werden Schalen besetzt?', a: 'Von innen nach außen – immer die innerste freie Schale zuerst.' },
+  { type: 'Regel',       q: 'Was sagt die Periodennummer über ein Atom?',  a: 'Anzahl der besetzten Elektronenschalen.' },
+  { type: 'Regel',       q: 'Was sagt die Hauptgruppennummer?',            a: 'Anzahl der Außenelektronen (Valenzelektronen).' },
+  { type: 'Anwendung',   q: 'Wie viele Elektronen hat Kohlenstoff auf Schale 1 und 2?', a: '2 auf der K-Schale, 4 auf der L-Schale.' },
+  { type: 'Anwendung',   q: 'Warum ist Helium chemisch inaktiv?',          a: 'Seine K-Schale ist vollständig besetzt (2 Elektronen) – Edelgaskonfiguration.' },
+  { type: 'Modellkritik',q: 'Was kann das Bohrsche Modell erklären?',      a: 'Stabilität der Atome, Quantensprünge, Spektrallinien einfacher Atome (z.B. Wasserstoff).' },
+  { type: 'Modellkritik',q: 'Was kann das Bohrsche Modell nicht erklären?',a: 'Warum Elektronen auf Schalen bleiben; feinere Spektrallinien; Verhalten bei mehreren Elektronen.' },
+];
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+const state = {
+  step: 0,                    // index in SCRIPT
+  phase: 'hook',
+  currentElement: 'C',
+  exerciseIdx: -1,            // which exercise element we're on
+  exerciseDone: [],
+
+  // atom building state
+  protonsPlaced: 0,
+  neutronsPlaced: 0,
+  electronsByShell: [0, 0, 0, 0], // index 1=K, 2=L, 3=M
+  shellsAdded: 0,             // how many shells the user has added (exercise phase)
+  demoMode: false,            // true during animation demo
+  taskActive: false,
+
+  // drag state
+  dragType: null,
+  dragIdx: null,
+
+  // hint used
+  hintUsed: false,
+
+  // flashcard state
+  fcIdx: 0,
+  fcFlipped: false,
+};
+
+// ── DOM REFS ─────────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const dialogText  = $('dialog-text');
+const nextBtn     = $('next-btn');
+const hintBtn     = $('hint-btn');
+const speechWave  = $('speech-wave');
+const missionText = $('mission-text');
+const missionBadge= $('mission-badge');
+const nucleus     = $('nucleus');
+const nucleusDrop = $('nucleus-drop');
+const nucleusLabel= $('nucleus-label');
+const atomCanvas  = $('atom-canvas');
+const stepTrack   = $('step-track');
+const pathDots    = $('path-dots');
+const feedbackToast = $('feedback-toast');
+const successScreen = $('success-screen');
+const flashcardScreen = $('flashcard-screen');
+const atomStage   = $('atom-stage');
+const transferScreen = $('transfer-screen');
+const exerciseSelector = $('exercise-selector');
+const particleBank = $('particle-bank');
+const elementCard = $('element-card');
+const elementBadge= $('element-badge');
+const addShellBtn = $('add-shell-btn');
+const removeShellBtn = $('remove-shell-btn');
+const shellControls = $('shell-controls');
+const infoBar     = $('info-bar');
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+function init() {
+  buildPathDots();
+  buildStepTrack();
+  buildOrbits(2); // show 2 orbits initially (demo for C)
+  buildTokens('C');
+  setupNucleusDrop();
+  setupOrbitDrop();
+  showStep(0);
+
+  // button events
+  nextBtn.addEventListener('click', onNext);
+  hintBtn.addEventListener('click', onHint);
+  addShellBtn.addEventListener('click', onAddShell);
+  removeShellBtn.addEventListener('click', onRemoveShell);
+  $('close-success').addEventListener('click', onCloseSuccess);
+  $('fc-close').addEventListener('click', () => flashcardScreen.classList.remove('show'));
+  $('fc-prev').addEventListener('click', () => navigateFC(-1));
+  $('fc-next').addEventListener('click', () => navigateFC(1));
+  $('fc-card').addEventListener('click', flipFC);
+}
+
+// ── PATH DOTS ────────────────────────────────────────────────────────────────
+function buildPathDots() {
+  const scenes = ['1','2','3','4','5','6'];
+  pathDots.innerHTML = '';
+  scenes.forEach((s, i) => {
+    const d = document.createElement('div');
+    d.className = 'path-dot' + (i < 4 ? ' done' : i === 4 ? ' active' : ' future');
+    d.title = 'Szene ' + s;
+    pathDots.appendChild(d);
+  });
+}
+
+// ── STEP TRACK ───────────────────────────────────────────────────────────────
+function buildStepTrack() {
+  stepTrack.innerHTML = '';
+  SCRIPT.forEach((_, i) => {
+    const p = document.createElement('div');
+    p.className = 'step-pip' + (i === 0 ? ' active' : '');
+    p.id = 'pip-' + i;
+    stepTrack.appendChild(p);
+  });
+}
+function updateStepTrack(idx) {
+  SCRIPT.forEach((_, i) => {
+    const p = $('pip-' + i);
+    if (!p) return;
+    p.className = 'step-pip ' + (i < idx ? 'done' : i === idx ? 'active' : '');
+  });
+}
+
+// ── ORBITS ───────────────────────────────────────────────────────────────────
+let orbitEls = [];
+let orbitHoverZones = [];
+
+function buildOrbits(count) {
+  // remove existing
+  orbitEls.forEach(o => o.remove());
+  orbitHoverZones.forEach(h => h.remove());
+  document.querySelectorAll('.orbit-wrapper').forEach(w => w.remove());
+  orbitEls = [];
+  orbitHoverZones = [];
+
+  for (let i = 1; i <= count; i++) {
+    const r = ORBIT_RADII[i];
+    // orbit ring
+    const orb = document.createElement('div');
+    orb.className = 'orbit';
+    orb.id = 'orbit-' + i;
+    orb.style.width  = r * 2 + 'px';
+    orb.style.height = r * 2 + 'px';
+    const lbl = document.createElement('div');
+    lbl.className = 'orbit-label';
+    lbl.textContent = SHELL_NAMES[i];
+    lbl.style.top   = (r - 8) + 'px';
+    lbl.style.right = '6px';
+    orb.appendChild(lbl);
+    atomCanvas.appendChild(orb);
+    orbitEls.push(orb);
+
+    // Hover zone: a RING around the orbit line (not a full disc).
+    // Implemented as a large circle with a transparent inner cutout via
+    // pointer-events on a clip path – we use a simpler trick:
+    // one outer div (pointer-events:all) + one inner div (pointer-events:none)
+    // that blocks the centre, leaving only the ring responsive.
+    const ringOuter = document.createElement('div');
+    ringOuter.className = 'orbit-hover-zone droppable';
+    ringOuter.id = 'hz-' + i;
+    const ringW = r * 2 + 36;
+    ringOuter.style.cssText = `width:${ringW}px;height:${ringW}px;pointer-events:all;z-index:${8 - i};`;
+    ringOuter.dataset.shell = i;
+
+    // Inner blocker: covers everything inside the ring
+    const ringInner = document.createElement('div');
+    const innerR = Math.max(0, r - 22);
+    ringInner.style.cssText = `position:absolute;width:${innerR*2}px;height:${innerR*2}px;border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:all;background:transparent;z-index:${8-i};`;
+    // inner blocker stops events reaching outer ring when cursor is in centre
+    ringInner.addEventListener('dragover', e => e.stopPropagation());
+    ringInner.addEventListener('drop',     e => e.stopPropagation());
+    ringOuter.appendChild(ringInner);
+
+    ringOuter.addEventListener('dragover', e => {
+      if (state.dragType === 'electron') {
+        e.preventDefault();
+        e.stopPropagation();
+        orb.classList.add('orbit-highlight');
+      }
+    });
+    ringOuter.addEventListener('dragleave', e => {
+      // only fire if leaving the ring entirely (not entering inner blocker)
+      if (!ringOuter.contains(e.relatedTarget)) {
+        orb.classList.remove('orbit-highlight');
+      }
+    });
+    ringOuter.addEventListener('drop', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      orb.classList.remove('orbit-highlight');
+      handleShellDrop(i, state.dragType, state.dragIdx);
+    });
+
+    atomCanvas.appendChild(ringOuter);
+    orbitHoverZones.push(ringOuter);
+  }
+}
+
+// ── TOKENS ───────────────────────────────────────────────────────────────────
+function buildTokens(elSymbol, locked = true) {
+  ['proton', 'neutron', 'electron'].forEach(type => {
+    const container = $(type + '-tokens');
+    container.innerHTML = '';
+    // Single endless-source token – never grays out
+    const t = document.createElement('div');
+    t.className = 'particle-token ' + type + (locked ? ' locked' : '');
+    t.id = type + '-token-0';
+    t.dataset.type = type;
+    t.dataset.idx  = '0';
+    const label = { proton: 'p⁺', neutron: 'n', electron: 'e⁻' };
+    t.textContent = label[type];
+    t.draggable = !locked;
+    t.addEventListener('dragstart', onDragStart);
+    t.addEventListener('dragend',   onDragEnd);
+    t.addEventListener('touchstart', onTouchStart, { passive: false });
+    const tips = {
+      proton:   'Proton: positiv geladen (+), im Kern',
+      neutron:  'Neutron: elektrisch neutral, im Kern',
+      electron: 'Elektron: negativ geladen (−), auf Schalen'
+    };
+    t.title = tips[type];
+    container.appendChild(t);
+  });
+  updateTokenCounts(elSymbol);
+  updateElementCard(elSymbol, locked);
+}
+
+function unlockTokens() {
+  document.querySelectorAll('.particle-token.locked').forEach(t => {
+    t.classList.remove('locked');
+    t.draggable = true;
+  });
+}
+
+function updateTokenCounts(elSymbol) {
+  const el = ELEMENTS[elSymbol];
+  const pc = $('proton-count');  if (pc) pc.textContent = state.protonsPlaced  + ' / ' + el.oz + ' benötigt';
+  const nc = $('neutron-count'); if (nc) nc.textContent = state.neutronsPlaced + ' / ' + (el.mz - el.oz) + ' benötigt';
+  const totalE = state.electronsByShell.reduce((a, b) => a + b, 0);
+  const ec = $('electron-count'); if (ec) ec.textContent = totalE + ' / ' + el.oz + ' benötigt';
+}
+
+function updateElementCard(elSymbol, hidden = false) {
+  const el = ELEMENTS[elSymbol];
+  elementBadge.textContent = el.name + ' (' + elSymbol + ')';
+  elementBadge.style.display = hidden ? 'none' : 'inline';
+  if (hidden) {
+    elementCard.style.display = 'none';
+    return;
+  }
+  elementCard.style.display = 'block';
+  elementCard.innerHTML = `
+    <div class="ec-symbol">${elSymbol}</div>
+    <div class="ec-name">${el.name}</div>
+    <div class="ec-row"><span>Ordnungszahl</span><span class="ec-val">${el.oz}</span></div>
+    <div class="ec-row"><span>Massenzahl</span><span class="ec-val">${el.mz}</span></div>
+    <div class="ec-row"><span>Periode</span><span class="ec-val">${el.period}</span></div>
+    <div class="ec-row"><span>Hauptgruppe</span><span class="ec-val">${el.group}</span></div>
+  `;
+}
+
+// ── RESET ATOM ────────────────────────────────────────────────────────────────
+function resetAtom(elSymbol, addShells = false) {
+  state.protonsPlaced = 0;
+  state.neutronsPlaced = 0;
+  state.electronsByShell = [0, 0, 0, 0];
+
+  // clear nucleus
+  nucleus.innerHTML = '';
+  const lbl = document.createElement('div');
+  lbl.id = 'nucleus-label';
+  lbl.className = '';
+  lbl.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:var(--font-mono);font-size:0.5rem;letter-spacing:1px;color:rgba(255,220,180,0.5);text-align:center;pointer-events:none;line-height:1.2;';
+  lbl.textContent = 'KERN';
+  nucleus.appendChild(lbl);
+  nucleus.style.boxShadow = '';
+  nucleus.classList.remove('shake');
+
+  // clear electron wrappers
+  document.querySelectorAll('.orbit-wrapper').forEach(w => w.remove());
+
+  // reset orbit styles
+  document.querySelectorAll('.orbit').forEach(o => o.classList.remove('active'));
+
+  if (addShells) {
+    // Exercise phase: start with no shells, user adds them
+    state.shellsAdded = 0;
+    buildOrbits(0);
+    shellControls.classList.add('visible');
+    addShellBtn.classList.add('visible');
+    removeShellBtn.classList.remove('visible');
+  }
+}
+
+// ── SHOW STEP ────────────────────────────────────────────────────────────────
+// ── LAYOUT MODE ────────────────────────────────────────────────────────────
+function setLayoutMode(mode) {
+  const scene = document.getElementById('scene');
+  scene.classList.remove('mode-cinematic', 'mode-split', 'mode-focus');
+  scene.classList.add('mode-' + mode);
+
+  // sync cd-next-btn with main nextBtn (cinematic mode)
+  const cdBtn = $('cd-next-btn');
+  if (mode === 'cinematic' && cdBtn) {
+    cdBtn.disabled  = nextBtn.disabled;
+    cdBtn.textContent = nextBtn.textContent;
+    cdBtn.onclick = () => nextBtn.click();
+  }
+}
+
+function syncCinematicBtn() {
+  const cdBtn = $('cd-next-btn');
+  if (!cdBtn) return;
+  cdBtn.disabled    = nextBtn.disabled;
+  cdBtn.textContent = nextBtn.textContent;
+}
+
+function setCinematicText(html) {
+  const ct = $('cinematic-text');
+  if (!ct) return;
+  ct.innerHTML = html.replace(/\n/g, '<br>');
+  // sync cd-wave with speech
+  const cdw = $('cd-wave');
+  if (cdw) {
+    cdw.classList.add('talking');
+    setTimeout(() => cdw.classList.remove('talking'), 800);
+  }
+  // update cd-pips
+  updateCdPips(state.step);
+}
+
+function updateCdPips(idx) {
+  const el = $('cd-pips');
+  if (!el) return;
+  el.innerHTML = '';
+  SCRIPT.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'cd-pip ' + (i < idx ? 'done' : i === idx ? 'active' : '');
+    el.appendChild(d);
+  });
+}
+
+function showStep(idx) {
+  if (idx < 0 || idx >= SCRIPT.length) return;
+  state.step = idx;
+  const s = SCRIPT[idx];
+  state.phase = s.phase;
+
+  updateStepTrack(idx);
+  setMission(s.mission, s.badge);
+  showFactCards(s.cards || []);
+  hintBtn.style.display = 'none';
+
+  // ── CINEMATIC mode: hook + pure input (no atom) ──
+  if (s.phase === 'hook' || s.phase === 'input') {
+    setLayoutMode('cinematic');
+    setDialog(s.text);         // NPC panel (small, TTS source)
+    setCinematicText(s.text);  // Big cinematic panel
+    nextBtn.disabled = true;   // controlled via cd-next-btn
+    nextBtn.textContent = s.nextLabel || 'WEITER ▶';
+    // enable cd-next-btn after short delay (let text render)
+    const cdBtn = $('cd-next-btn');
+    if (cdBtn) {
+      cdBtn.disabled = false;
+      cdBtn.textContent = s.nextLabel || 'WEITER ▶';
+    }
+    nextBtn.disabled = false; // also keep real btn in sync
+    transferScreen.classList.remove('show');
+    exerciseSelector.classList.remove('show');
+    return;
+  }
+
+  // ── SPLIT mode: input-anim + task + exercise ──
+  if (s.phase === 'input-anim' || s.phase === 'task' || s.phase === 'exercise-intro') {
+    setLayoutMode('split');
+    setDialog(s.text);
+    nextBtn.disabled = !(!s.unlock);
+    nextBtn.textContent = s.nextLabel || 'WEITER ▶';
+    transferScreen.classList.remove('show');
+    // Only hide selector for non-exercise phases
+    if (s.phase !== 'exercise-intro') exerciseSelector.classList.remove('show');
+    particleBank.style.display = 'block';
+
+    if (s.phase === 'input-anim') {
+      runAnimStep(s);
+    }
+    if (s.phase === 'task') {
+      startTask(s);
+    }
+    if (s.phase === 'exercise-intro') {
+      atomStage.style.display = 'flex';
+    }
+    return;
+  }
+
+  // ── FOCUS mode: transfer questions + cliffhanger ──
+  if (s.phase === 'transfer' || s.phase === 'cliffhanger') {
+    setLayoutMode('focus');
+    // Reset info-bar back to default position
+    infoBar.style.gridColumn = '';
+    infoBar.style.gridRow    = '';
+    setDialog(s.text);
+    nextBtn.disabled = (s.phase === 'transfer');
+    nextBtn.textContent = s.phase === 'transfer' ? 'ANTWORT WÄHLEN …' : s.nextLabel || 'WEITER ▶';
+    exerciseSelector.classList.remove('show');
+
+    if (s.phase === 'transfer') {
+      showTransferQuestion();
+      transferScreen.classList.add('show');
+    }
+    if (s.phase === 'cliffhanger') {
+      transferScreen.classList.remove('show');
+      // show cliffhanger text in focus panel area
+      transferScreen.classList.add('show');
+      transferScreen.innerHTML = `
+        <div style="padding:32px 28px;background:var(--paper2);border:1.5px solid var(--ink3);border-radius:var(--radius-lg);box-shadow:var(--shadow);height:100%;display:flex;flex-direction:column;justify-content:center;">
+          <div style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:3px;color:var(--teal);margin-bottom:20px;text-transform:uppercase;">◈ Ausblick</div>
+          <div style="font-size:1.1rem;line-height:1.85;color:var(--ink2);">${s.text.replace(/\n/g,'<br>')}</div>
+          <div style="margin-top:28px;">
+            <button onclick="document.getElementById('next-btn').click()" style="background:var(--ink);color:var(--paper);border:none;border-radius:var(--radius);font-family:var(--font-mono);font-size:0.7rem;letter-spacing:2px;padding:12px 24px;cursor:pointer;">LERNKARTEN ANSEHEN ▶</button>
+          </div>
+        </div>`;
+    }
+    return;
+  }
+}
+
+// ── DIALOG ───────────────────────────────────────────────────────────────────
+function setDialog(html) {
+  speechWave.classList.add('talking');
+  dialogText.innerHTML = html.replace(/\n/g, '<br>');
+  setTimeout(() => speechWave.classList.remove('talking'), 600);
+  // auto-speak new dialog
+  const plain = stripHtml(html);
+  ttsSpeak(plain, true);
+}
+
+function setMission(text, badge, badgeClass = '') {
+  missionText.textContent = text;
+  missionBadge.textContent = badge;
+  missionBadge.className = 'mission-badge ' + badgeClass;
+  if (badge === 'AKTIV' || badge === 'ÜBUNG') missionBadge.className = 'mission-badge active';
+  if (badge === '✓ FERTIG') missionBadge.className = 'mission-badge success';
+}
+
+function showFactCards(ids) {
+  // Karten bleiben sichtbar – einmal eingeblendet, nie mehr ausgeblendet.
+  // Neue Karten tauchen von links nach rechts (DOM-Reihenfolge) auf.
+  const ALL_CARDS = ['fc-kern','fc-schalen','fc-perioden','fc-bohr'];
+  let delay = 0;
+  ALL_CARDS.forEach(id => {
+    const c = $(id);
+    if (!c) return;
+    if (ids.includes(id) && !c.classList.contains('visible')) {
+      setTimeout(() => c.classList.add('visible'), delay);
+      delay += 180;
+    }
+  });
+}
+
+// ── ANIMATIONS (Demo build 2.4) ───────────────────────────────────────────────
+let demoProtons = 0, demoNeutrons = 0;
+
+function runAnimStep(s) {
+  nextBtn.disabled = true;
+  const delay = 170;
+
+  if (s.anim.type === 'show-nucleus') {
+    // just show the nucleus (already visible), reveal it fresh
+    nucleus.innerHTML = '';
+    const lbl = document.createElement('div');
+    lbl.textContent = '¹²₆C';
+    lbl.style.cssText = 'font-family:var(--font-mono);font-size:0.55rem;color:rgba(255,220,180,0.6);text-align:center;';
+    nucleus.appendChild(lbl);
+    demoProtons = 0; demoNeutrons = 0;
+    buildOrbits(2);
+    setTimeout(() => { nextBtn.disabled = false; }, 300);
+  }
+
+  if (s.anim.type === 'add-protons') {
+    // clear label first
+    nucleus.innerHTML = '';
+    let i = 0;
+    const interval = setInterval(() => {
+      addNucleusParticle('proton');
+      i++;
+      if (i >= s.anim.count) { clearInterval(interval); demoProtons = s.anim.count; setTimeout(() => { nextBtn.disabled = false; }, 200); }
+    }, delay);
+  }
+
+  if (s.anim.type === 'add-neutrons') {
+    let i = 0;
+    const interval = setInterval(() => {
+      addNucleusParticle('neutron');
+      i++;
+      if (i >= s.anim.count) { clearInterval(interval); demoNeutrons = s.anim.count; setTimeout(() => { nextBtn.disabled = false; }, 200); }
+    }, delay);
+  }
+
+  if (s.anim.type === 'add-electrons') {
+    // activate orbits first
+    document.getElementById('orbit-1').classList.add('active');
+    document.getElementById('orbit-2').classList.add('active');
+    let count = 0;
+    const total = s.anim.shell1 + s.anim.shell2;
+    const allShells = [...Array(s.anim.shell1).fill(1), ...Array(s.anim.shell2).fill(2)];
+    const shellCounts = [0,0,0,0];
+    const interval = setInterval(() => {
+      const sh = allShells[count];
+      shellCounts[sh]++;
+      renderElectronsOnShell(sh, shellCounts[sh]);
+      count++;
+      if (count >= total) { clearInterval(interval); setTimeout(() => { nextBtn.disabled = false; }, 200); }
+    }, delay);
+  }
+
+  if (s.anim.type === 'fade-demo') {
+    // fade nucleus and electrons
+    atomCanvas.style.opacity = '0.28';
+    atomCanvas.style.transition = 'opacity 0.8s';
+    setTimeout(() => { nextBtn.disabled = false; }, 600);
+  }
+}
+
+function addNucleusParticle(type) {
+  const lbl = nucleus.querySelector('#nucleus-label, div[id="nucleus-label"]');
+  if (lbl) lbl.remove();
+
+  const existing = Array.from(nucleus.querySelectorAll('.n-proton, .n-neutron'));
+  const count = existing.length;
+  const dot = document.createElement('div');
+  dot.className = 'n-' + type;
+
+  // Agglomerate: random scatter within growing cluster radius
+  const R = 24; // nucleus visual radius
+  const pSize = 5.5; // half particle size
+  let x, y, tries = 0, best = { x: 0, y: 0, score: -1 };
+
+  while (tries < 40) {
+    const angle = Math.random() * Math.PI * 2;
+    const maxR  = Math.min(R - pSize, 6 + count * 1.8);
+    const r     = Math.sqrt(Math.random()) * maxR; // sqrt for uniform disk
+    const cx = R + r * Math.cos(angle);
+    const cy = R + r * Math.sin(angle);
+    // score: prefer spots further from existing particles
+    let minDist = 99;
+    existing.forEach(p => {
+      const px = parseFloat(p.style.left) + pSize;
+      const py = parseFloat(p.style.top)  + pSize;
+      const d  = Math.hypot(cx - px, cy - py);
+      if (d < minDist) minDist = d;
+    });
+    if (minDist > best.score) { best = { x: cx, y: cy, score: minDist }; }
+    tries++;
+  }
+
+  dot.style.left = (best.x - pSize) + 'px';
+  dot.style.top  = (best.y - pSize) + 'px';
+  nucleus.appendChild(dot);
+
+  // Gentle nudge existing particles outward for organic feel
+  existing.forEach(p => {
+    const px = parseFloat(p.style.left) + pSize;
+    const py = parseFloat(p.style.top)  + pSize;
+    const dx = (px - R) * 0.04;
+    const dy = (py - R) * 0.04;
+    p.style.left = (px + dx - pSize) + 'px';
+    p.style.top  = (py + dy - pSize) + 'px';
+  });
+}
+
+function renderElectronsOnShell(shell, count) {
+  // remove existing wrappers for this shell
+  document.querySelectorAll('.ew-' + shell).forEach(w => w.remove());
+  const r = ORBIT_RADII[shell];
+  for (let i = 0; i < count; i++) {
+    const angle = (360 / count) * i;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'orbit-wrapper ew-' + shell;
+    wrapper.style.width  = r * 2 + 'px';
+    wrapper.style.height = r * 2 + 'px';
+    const spin = document.createElement('div');
+    spin.className = 'e-spin';
+    spin.style.animationDuration = ORBIT_SPEEDS[shell] + 's';
+    spin.style.animationDelay = (-(ORBIT_SPEEDS[shell] * i / count)) + 's';
+    spin.style.transform = `rotate(${angle}deg)`;
+    const dot = document.createElement('div');
+    dot.className = 'e-dot';
+    if (shell >= 2) dot.style.background = 'radial-gradient(circle at 35% 35%, #a0d0a0, #1a6b2a)';
+    if (shell >= 3) dot.style.background = 'radial-gradient(circle at 35% 35%, #d0c080, #7a6020)';
+    spin.appendChild(dot);
+    wrapper.appendChild(spin);
+    atomCanvas.appendChild(wrapper);
+  }
+}
+
+// ── TASK ──────────────────────────────────────────────────────────────────────
+function startTask(s) {
+  state.currentElement = s.element || 'C';
+  state.taskActive = true;
+  state.hintUsed = false;
+
+  // restore canvas opacity
+  atomCanvas.style.opacity = '1';
+  atomCanvas.style.transition = '';
+
+  // clean build slate
+  resetAtom(state.currentElement, false);
+  buildOrbits(2); // for C
+  shellControls.classList.remove('visible');
+  addShellBtn.classList.remove('visible');
+  buildTokens(state.currentElement, false);
+  updateElementCard(state.currentElement, false);
+
+  // show hint btn
+  if (s.hint) {
+    hintBtn.style.display = 'block';
+    hintBtn.textContent = '💡 HINWEIS (einmalig)';
+    hintBtn.classList.remove('used');
+    hintBtn.dataset.hint = s.hint;
+  }
+  nextBtn.disabled = true;
+  nextBtn.textContent = 'AUFGABE ERFÜLLEN …';
+}
+
+function startExerciseElement(elSymbol) {
+  state.currentElement = elSymbol;
+  state.taskActive = true;
+  state.protonsPlaced = 0;
+  state.neutronsPlaced = 0;
+  state.electronsByShell = [0, 0, 0, 0];
+  state.shellsAdded = 0;
+
+  // restore canvas
+  atomCanvas.style.opacity = '1';
+
+  // clear atom
+  resetAtom(elSymbol, true); // exercise = user adds shells
+
+  // build tokens – show element card for exercise
+  buildTokens(elSymbol, false);
+  updateElementCard(elSymbol, false);
+
+  // update exercise selector
+  document.querySelectorAll('.element-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.el === elSymbol);
+  });
+
+  atomStage.style.display = 'flex';
+  exerciseSelector.classList.add('show');
+  nextBtn.disabled = true;
+  nextBtn.textContent = 'AUFGABE ERFÜLLEN …';
+
+  setDialog(`<strong>Baue ${ELEMENTS[elSymbol].name} (${elSymbol})</strong> nach dem Bohrschen Modell.<br><br>Entscheide selbst, wie viele Schalen du brauchst.`);
+  setMission(`Baue ${ELEMENTS[elSymbol].name}: OZ ${ELEMENTS[elSymbol].oz}, MZ ${ELEMENTS[elSymbol].mz}`, 'AKTIV');
+}
+
+// ── SHELL MANAGEMENT ─────────────────────────────────────────────────────────
+function onAddShell() {
+  if (state.shellsAdded >= 3) { showToast('Maximal 3 Schalen möglich (Periode 1–3).', 'error'); return; }
+  state.shellsAdded++;
+  buildOrbits(state.shellsAdded);
+  reattachOrbitDrop();
+  removeShellBtn.classList.add('visible');
+  if (state.shellsAdded >= 3) addShellBtn.classList.remove('visible');
+}
+
+function onRemoveShell() {
+  const shell = state.shellsAdded;
+  if (shell <= 0) return;
+  if (state.electronsByShell[shell] > 0) {
+    showToast('Entferne erst die Elektronen von dieser Schale.', 'error'); return;
+  }
+  state.shellsAdded--;
+  buildOrbits(state.shellsAdded);
+  reattachOrbitDrop();
+  addShellBtn.classList.add('visible');
+  if (state.shellsAdded <= 0) removeShellBtn.classList.remove('visible');
+}
+
+// ── DROP SETUP ────────────────────────────────────────────────────────────────
+function setupNucleusDrop() {
+  [nucleusDrop, nucleus].forEach(el => {
+    el.addEventListener('dragover', e => {
+      e.preventDefault(); e.stopPropagation();
+      nucleusDrop.classList.add('drag-over');
+    });
+    el.addEventListener('dragleave', () => nucleusDrop.classList.remove('drag-over'));
+    el.addEventListener('drop', e => {
+      e.preventDefault(); e.stopPropagation();
+      nucleusDrop.classList.remove('drag-over');
+      handleNucleusDrop(state.dragType, state.dragIdx);
+    });
+  });
+}
+
+function setupOrbitDrop() {
+  reattachOrbitDrop();
+}
+
+function reattachOrbitDrop() {
+  // Listeners are attached in buildOrbits directly – nothing to do here.
+  // This function kept for compatibility with onAddShell/onRemoveShell.
+}
+
+// ── DRAG EVENTS ──────────────────────────────────────────────────────────────
+function onDragStart(e) {
+  if (!state.taskActive) { e.preventDefault(); return; }
+  if (e.target.classList.contains('locked')) { e.preventDefault(); return; }
+  state.dragType = e.target.dataset.type;
+  state.dragIdx  = '0';
+  e.dataTransfer.effectAllowed = 'copy';
+  e.dataTransfer.setData('text/plain', state.dragType + ':0');
+  // Brief scale-down feedback, but token stays visible
+  e.target.style.transform = 'scale(0.88)';
+}
+function onDragEnd(e) {
+  e.target.style.transform = '';
+  nucleusDrop.classList.remove('drag-over');
+  document.querySelectorAll('.orbit-hover-zone').forEach(h => h.classList.remove('drag-over-orbit'));
+  document.querySelectorAll('.orbit').forEach(o => o.classList.remove('orbit-highlight'));
+}
+
+// ── TOUCH DRAG ───────────────────────────────────────────────────────────────
+let touchToken = null, touchGhost = null;
+
+function onTouchStart(e) {
+  if (!state.taskActive || e.target.classList.contains('locked')) return;
+  e.preventDefault();
+  touchToken = e.target;
+  state.dragType = touchToken.dataset.type;
+  state.dragIdx  = touchToken.dataset.idx;
+  const touch = e.touches[0];
+  touchGhost = touchToken.cloneNode(true);
+  touchGhost.style.cssText = `position:fixed;opacity:0.75;pointer-events:none;z-index:999;width:${touchToken.offsetWidth}px;height:${touchToken.offsetHeight}px;left:${touch.clientX - touchToken.offsetWidth/2}px;top:${touch.clientY - touchToken.offsetHeight/2}px;`;
+  document.body.appendChild(touchGhost);
+  document.addEventListener('touchmove', onTouchMove, { passive: false });
+  document.addEventListener('touchend', onTouchEnd);
+}
+function onTouchMove(e) {
+  e.preventDefault();
+  const t = e.touches[0];
+  if (touchGhost) { touchGhost.style.left = (t.clientX - 17) + 'px'; touchGhost.style.top = (t.clientY - 17) + 'px'; }
+}
+function onTouchEnd(e) {
+  document.removeEventListener('touchmove', onTouchMove);
+  document.removeEventListener('touchend', onTouchEnd);
+  if (touchGhost) { touchGhost.remove(); touchGhost = null; }
+  if (!touchToken) return;
+  const t = e.changedTouches[0];
+  const canvasRect = atomCanvas.getBoundingClientRect();
+  const cx = canvasRect.left + canvasRect.width / 2;
+  const cy = canvasRect.top  + canvasRect.height / 2;
+  const dx = t.clientX - cx, dy = t.clientY - cy;
+  const dist = Math.sqrt(dx*dx + dy*dy);
+  const nucRect = nucleus.getBoundingClientRect();
+  const inNucleus = t.clientX >= nucRect.left && t.clientX <= nucRect.right && t.clientY >= nucRect.top && t.clientY <= nucRect.bottom;
+  if (inNucleus) {
+    handleNucleusDrop(state.dragType, state.dragIdx);
+  } else if (state.dragType === 'electron') {
+    let best = -1, bestD = 30;
+    for (let i = 1; i <= (state.shellsAdded || 2); i++) {
+      const d = Math.abs(dist - ORBIT_RADII[i]);
+      if (d < bestD) { bestD = d; best = i; }
+    }
+    if (best > 0) handleShellDrop(best, state.dragType, state.dragIdx);
+    else showToast('Ziehe das Elektron näher an eine Schale.', 'error');
+  }
+  touchToken = null;
+}
+
+// ── DROP HANDLERS ─────────────────────────────────────────────────────────────
+function handleNucleusDrop(type, idx) {
+  if (!state.taskActive) { showToast(FEEDBACK.not_unlocked, 'error'); return; }
+  if (type === 'electron') { showToast(FEEDBACK.electron_in_nucleus, 'error'); shakeNucleus(); return; }
+  if (type !== 'proton' && type !== 'neutron') return;
+  const el = ELEMENTS[state.currentElement];
+  const maxP = el.oz, maxN = el.mz - el.oz;
+
+  if (type === 'proton') {
+    if (state.protonsPlaced >= maxP) {
+      const msg = typeof FEEDBACK.too_many_protons === 'function' ? FEEDBACK.too_many_protons(state.currentElement) : FEEDBACK.too_many_protons;
+      showToast(msg, 'error'); shakeNucleus(); return;
+    }
+    state.protonsPlaced++;
+  } else {
+    if (state.neutronsPlaced >= maxN) {
+      const msg = typeof FEEDBACK.too_many_neutrons === 'function' ? FEEDBACK.too_many_neutrons(state.currentElement) : FEEDBACK.too_many_neutrons;
+      showToast(msg, 'error'); shakeNucleus(); return;
+    }
+    state.neutronsPlaced++;
+  }
+
+  addNucleusParticle(type);  // agglomerate placement
+
+  updateTokenCounts(state.currentElement);
+  checkCompletion();
+}
+
+function handleShellDrop(shell, type, idx) {
+  if (!state.taskActive) { showToast(FEEDBACK.not_unlocked, 'error'); return; }
+  if (type !== 'electron') {
+    showToast(type === 'proton' ? FEEDBACK.proton_on_shell : FEEDBACK.neutron_on_shell, 'error');
+    return;
+  }
+
+  const el = ELEMENTS[state.currentElement];
+
+  // In task phase: only shells 1+2 exist for Carbon
+  if (state.phase === 'task' && shell > 2) {
+    const el = ELEMENTS[state.currentElement];
+    showToast(`Für ${el.name} reichen ${el.shells.length} Schale(n).`, 'error'); return;
+  }
+  // In exercise phase: shell must have been added
+  if (state.phase !== 'task' && shell > state.shellsAdded) {
+    showToast('Diese Schale existiert noch nicht. Füge sie zuerst hinzu.', 'error'); return;
+  }
+
+  // Enforce fill from inside out:
+  // Inner shells must be filled to their element-specific max before outer
+  for (let s = 1; s < shell; s++) {
+    const neededInner = el.shells[s - 1]; // e.g. C.shells = [2,4]
+    if (state.electronsByShell[s] < neededInner) {
+      showToast('Fülle zuerst die ' + SHELL_NAMES[s] + '-Schale vollständig.', 'error');
+      return;
+    }
+  }
+
+  // Check this shell isn't already full for this element
+  const neededOnShell = el.shells[shell - 1];
+  if (neededOnShell === undefined) {
+    showToast('Dieses Element braucht keine Elektronen auf Schale ' + SHELL_NAMES[shell] + '.', 'error');
+    return;
+  }
+  if (state.electronsByShell[shell] >= neededOnShell) {
+    showToast('Die ' + SHELL_NAMES[shell] + '-Schale ist für dieses Element voll (' + neededOnShell + ' Elektronen).', 'error');
+    return;
+  }
+
+  // Place it
+  state.electronsByShell[shell]++;
+  const orb = document.getElementById('orbit-' + shell);
+  if (orb) orb.classList.add('active');
+  renderElectronsOnShell(shell, state.electronsByShell[shell]);
+
+  updateTokenCounts(state.currentElement);
+  checkCompletion();
+}
+
+// ── CHECK COMPLETION ──────────────────────────────────────────────────────────
+function checkCompletion() {
+  const el = ELEMENTS[state.currentElement];
+  const totalE = state.electronsByShell.reduce((a, b) => a + b, 0);
+  const nucleusDone = state.protonsPlaced === el.oz && state.neutronsPlaced === el.mz - el.oz;
+  const shellsDone  = el.shells.every((count, i) => state.electronsByShell[i + 1] === count);
+
+  if (nucleusDone && !shellsDone) {
+    nucleus.style.boxShadow = '0 0 18px rgba(26,107,107,0.5)';
+    setMission(`Kern fertig! Jetzt die Elektronen auf die Schalen.`, 'AKTIV');
+  }
+
+  if (nucleusDone && shellsDone) {
+    // check no extra shells
+    if (state.shellsAdded > 0) {
+      for (let s = state.shellsAdded; s >= 1; s--) {
+        if (state.electronsByShell[s] === 0) {
+          showToast(FEEDBACK.too_many_shells, 'error'); return;
+        }
+      }
+    }
+    onAtomComplete();
+  }
+}
+
+function onAtomComplete() {
+  const el = ELEMENTS[state.currentElement];
+  const totalE = state.electronsByShell.reduce((a, b) => a + b, 0);
+  const isExercise = state.phase !== 'task';
+
+  nucleus.style.boxShadow = '0 0 28px rgba(26,107,107,0.7)';
+  state.taskActive = false;
+  hintBtn.style.display = 'none';
+
+  if (state.currentElement === 'C') {
+    // Main task complete
+    showSuccessOverlay(
+      '⚛️', 'KOHLENSTOFF GEBAUT!',
+      `Du hast erfolgreich ein <strong>Kohlenstoff-12-Atom</strong> nach dem Bohrschen Modell konstruiert.`,
+      [
+        { val: '6p', lbl: 'Protonen' },
+        { val: '6n', lbl: 'Neutronen' },
+        { val: '6e⁻', lbl: 'Elektronen' },
+      ],
+      `<em>2 Elektronen</em> auf K-Schale · <em>4 Elektronen</em> auf L-Schale<br>Das Atom ist elektrisch neutral.`,
+      () => {
+        // Direkt in Übungsphase – kein showStep-Umweg
+        showExercisePhase();
+      }
+    );
+  } else {
+    // Exercise element complete
+    const feedback = ELEMENT_COMPLETE_FEEDBACK[state.currentElement] || '';
+    showSuccessOverlay(
+      '✓', el.name + ' GEBAUT!',
+      feedback,
+      el.shells.map((c, i) => ({ val: c + 'e⁻', lbl: SHELL_NAMES[i + 1] + '-Schale' })),
+      '',
+      () => {
+        state.exerciseDone.push(state.currentElement);
+        // mark in selector
+        const btn = document.querySelector(`.element-btn[data-el="${state.currentElement}"]`);
+        if (btn) btn.classList.add('done');
+        // check if all done
+        if (state.exerciseDone.length >= EXERCISE_ORDER.length) {
+          const tIdx = SCRIPT.findIndex(s => s.id === 'transfer');
+          showStep(tIdx);
+        } else {
+          showExercisePhase(); // show updated selector
+        }
+        // REPLACED – old code follows (removed):
+        // (cleaned up)
+      }
+    );
+  }
+}
+
+// ── SUCCESS OVERLAY ───────────────────────────────────────────────────────────
+let successCallback = null;
+function showSuccessOverlay(icon, title, body, stats, body2, cb) {
+  $('s-icon').textContent = icon;
+  $('s-title').textContent = title;
+  $('s-body').innerHTML = body;
+  $('s-body2').innerHTML = body2;
+  successCallback = cb;
+  const statsEl = $('s-stats');
+  statsEl.innerHTML = '';
+  stats.forEach(s => {
+    statsEl.innerHTML += `<div class="s-stat"><span class="s-val">${s.val}</span><span class="s-lbl">${s.lbl}</span></div>`;
+  });
+  successScreen.classList.add('show');
+}
+function onCloseSuccess() {
+  successScreen.classList.remove('show');
+  if (successCallback) { successCallback(); successCallback = null; }
+}
+
+// ── EXERCISE PHASE SETUP ──────────────────────────────────────────────────────
+function showExercisePhase() {
+  setLayoutMode('split');
+  atomStage.style.display = 'flex';
+  particleBank.style.display = 'block';
+  transferScreen.classList.remove('show');
+  shellControls.classList.add('visible');
+  nextBtn.disabled = true;
+  nextBtn.textContent = 'AUFGABE ERFÜLLEN …';
+  setDialog('Wähle ein Element aus der Liste und baue sein Atom.');
+  setMission('Wähle dein nächstes Element.', 'ÜBUNG');
+  // Push info-bar to row 3 so selector (row 2) is fully visible
+  infoBar.style.gridColumn = '1 / 4';
+  infoBar.style.gridRow    = '3';
+  // Selector nach kurzem Tick einblenden, damit keine andere Funktion ihn wieder versteckt
+  buildExerciseSelector();
+  setTimeout(() => {
+    exerciseSelector.classList.add('show');
+  }, 50);
+}
+
+function buildExerciseSelector() {
+  exerciseSelector.classList.add('show');
+  exerciseSelector.innerHTML = `
+    <div class="ex-title">◈ Elemente — Wähle eines aus</div>
+    <div class="element-grid" id="el-grid"></div>
+  `;
+  const grid = $('el-grid');
+  EXERCISE_ORDER.forEach(sym => {
+    const el = ELEMENTS[sym];
+    const btn = document.createElement('button');
+    btn.className = 'element-btn' + (state.exerciseDone.includes(sym) ? ' done' : '');
+    btn.dataset.el = sym;
+    btn.innerHTML = `<span class="el-symbol">${sym}</span><span class="el-name">${el.name}</span><span class="el-num">OZ ${el.oz} · MZ ${el.mz}</span>`;
+    btn.addEventListener('click', () => {
+      if (!btn.classList.contains('done')) startExerciseElement(sym);
+    });
+    grid.appendChild(btn);
+  });
+}
+
+// ── TRANSFER QUESTION ─────────────────────────────────────────────────────────
+function showTransferQuestion() {
+  transferScreen.innerHTML = '';
+  const sections = [
+    {
+      id: 'q1',
+      question: 'Dein Atom ist stabil. Die Elektronen sitzen auf ihren Schalen. Jetzt gibst du dem Atom Energie von außen – Wärme oder Licht. Was passiert?',
+      options: [
+        { letter: 'A', text: 'Das Elektron wird schneller auf seiner Bahn.' },
+        { letter: 'B', text: 'Das Elektron springt auf eine äußere Schale.' },
+        { letter: 'C', text: 'Das Atom zerfällt.' },
+      ],
+      responses: {
+        A: 'Guter Gedanke – klassische Physik würde das erwarten. Aber Bohr sagt: Auf einer Schale ändert sich die Energie nicht. Das Elektron muss die Bahn wechseln – oder gar nichts tun.',
+        B: 'Genau. Das Elektron absorbiert die Energie und springt auf eine höhere Schale – ein <strong>Quantensprung</strong>. Beim Zurückfallen gibt es die Energie als <strong>Licht</strong> ab. Deshalb leuchten Atome in bestimmten Farben.',
+        C: 'Bei normaler Wärme oder Licht nicht. Dafür bräuchtest du viel mehr Energie – genug, um das Elektron vollständig zu entfernen (<strong>Ionisierung</strong>). Das Atom würde zu einem positiven Ion.',
+      }
+    },
+    {
+      id: 'q2',
+      question: 'Die Ionisierungsenergie beschreibt, wie viel Energie nötig ist, um ein Elektron vollständig aus dem Atom zu entfernen. Welches Elektron lässt sich am leichtesten abspalten?',
+      options: [
+        { letter: 'A', text: 'Ein Elektron auf der K-Schale.' },
+        { letter: 'B', text: 'Ein Valenzelektron auf der äußersten Schale.' },
+        { letter: 'C', text: 'Das macht keinen Unterschied.' },
+      ],
+      responses: {
+        A: 'Die K-Schale sitzt direkt am Kern – die Elektronen dort werden <strong>stark angezogen</strong>. Sie loszureißen kostet sehr viel Energie.',
+        B: 'Richtig. Valenzelektronen sind weit vom Kern entfernt und schwächer gebunden – <strong>geringere Ionisierungsenergie</strong>. Deshalb reagieren Elemente mit einem Valenzelektron (z.B. Natrium, Lithium) so aggressiv.',
+        C: 'Die Entfernung vom Kern macht einen großen Unterschied. Je weiter außen, desto leichter abspalten.',
+      }
+    }
+  ];
+
+  sections.forEach((sec, si) => {
+    const div = document.createElement('div');
+    div.style.marginBottom = '24px';
+    div.innerHTML = `<div class="transfer-q">${sec.question}</div><div class="transfer-options" id="opts-${sec.id}"></div><div class="t-response" id="resp-${sec.id}"></div>`;
+    transferScreen.appendChild(div);
+    // add options after appending
+    const optsEl = div.querySelector(`#opts-${sec.id}`);
+    sec.options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 't-option';
+      btn.innerHTML = `<span class="opt-letter">${opt.letter}</span><span class="opt-text">${opt.text}</span>`;
+      btn.addEventListener('click', () => {
+        div.querySelectorAll('.t-option').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        const respEl = div.querySelector(`#resp-${sec.id}`);
+        respEl.innerHTML = sec.responses[opt.letter];
+        respEl.classList.add('show');
+        checkAllTransferAnswered(sections);
+      });
+      optsEl.appendChild(btn);
+    });
+  });
+}
+
+let transferAnswered = 0;
+function checkAllTransferAnswered(sections) {
+  transferAnswered = 0;
+  sections.forEach(sec => {
+    if (document.querySelector(`#resp-${sec.id}`)?.classList.contains('show')) transferAnswered++;
+  });
+  if (transferAnswered >= sections.length) {
+    nextBtn.disabled = false;
+    nextBtn.textContent = 'WEITER ▶';
+    setMission('Beide Fragen beantwortet. Weiter zum Ausblick.', 'AKTIV');
+  }
+}
+
+// ── NEXT BUTTON ───────────────────────────────────────────────────────────────
+function onNext() {
+  const s = SCRIPT[state.step];
+
+  if (s.phase === 'cliffhanger') {
+    showFlashcards();
+    return;
+  }
+
+  if (s.phase === 'exercise-intro') {
+    showExercisePhase();
+    return;
+  }
+
+  const next = state.step + 1;
+  if (next < SCRIPT.length) showStep(next);
+}
+
+// ── HINT ─────────────────────────────────────────────────────────────────────
+function onHint() {
+  if (state.hintUsed) return;
+  state.hintUsed = true;
+  const hint = hintBtn.dataset.hint || 'Kein Hinweis verfügbar.';
+  showToast('💡 ' + hint, 'info', 5000);
+  hintBtn.classList.add('used');
+  hintBtn.textContent = '💡 HINWEIS (verwendet)';
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+let toastTimeout;
+function showToast(msg, type = 'error', duration = 3500) {
+  feedbackToast.textContent = msg;
+  feedbackToast.className = 'show ' + type;
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => { feedbackToast.className = ''; }, duration);
+}
+
+// ── SHAKE ─────────────────────────────────────────────────────────────────────
+function shakeNucleus() {
+  nucleus.style.animation = '';
+  nucleus.classList.remove('shake');
+  requestAnimationFrame(() => requestAnimationFrame(() => nucleus.classList.add('shake')));
+  setTimeout(() => nucleus.classList.remove('shake'), 450);
+}
+
+// ── FLASHCARDS ───────────────────────────────────────────────────────────────
+function showFlashcards() {
+  state.fcIdx = 0;
+  state.fcFlipped = false;
+  flashcardScreen.classList.add('show');
+  renderFC();
+}
+function renderFC() {
+  const fc = FLASHCARDS[state.fcIdx];
+  $('fc-type').textContent   = fc.type;
+  $('fc-type-b').textContent = fc.type;
+  $('fc-question').innerHTML = fc.q;
+  $('fc-answer').innerHTML   = fc.a.replace(/\n/g, '<br>');
+  $('fc-counter').textContent = (state.fcIdx + 1) + ' / ' + FLASHCARDS.length;
+  $('fc-card').classList.remove('flipped');
+  state.fcFlipped = false;
+}
+function flipFC() {
+  state.fcFlipped = !state.fcFlipped;
+  $('fc-card').classList.toggle('flipped', state.fcFlipped);
+}
+function navigateFC(dir) {
+  state.fcIdx = Math.max(0, Math.min(FLASHCARDS.length - 1, state.fcIdx + dir));
+  renderFC();
+}
+
+
+// ═══════════════════════════════════════════════════════════════════════
+//  TTS ENGINE — Web Speech API (optimiert)
+// ═══════════════════════════════════════════════════════════════════════
+
+const tts = {
+  synth:         window.speechSynthesis,
+  voices:        [],
+  voice:         null,
+  muted:         false,
+  speaking:      false,
+  speed:         1.1,
+  speeds:        [0.9, 1.1, 1.3, 1.6],
+  speedIdx:      1,
+  progressTimer: null,
+  startTime:     0,
+  duration:      0,
+  queue:         [],   // Satzweise abspielen für natürlichere Pausen
+};
+
+function stripHtml(html) {
+  return html
+    .replace(/<br\s*\/?>/gi, '… ')
+    .replace(/<strong>([^<]+)<\/strong>/gi, '$1')
+    .replace(/<em>([^<]+)<\/em>/gi, '$1')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&auml;/g,'ä').replace(/&ouml;/g,'ö').replace(/&uuml;/g,'ü')
+    .replace(/&Auml;/g,'Ä').replace(/&Ouml;/g,'Ö').replace(/&Uuml;/g,'Ü')
+    .replace(/&szlig;/g,'ß').replace(/&nbsp;/g,' ')
+    .replace(/⁻/g,' minus').replace(/²/g,' quadrat').replace(/⁺/g,' plus')
+    .replace(/¹²/g,'zwölf').replace(/₆/g,'')
+    .replace(/·/g,' ')
+    .replace(/◈|◉|◎|⊙|⬡|✦|▶|■/g, '')
+    .replace(/z\s*=\s*2·n²/g, 'z gleich 2 mal n hoch 2')
+    .replace(/K-Schale/g, 'K Schale').replace(/L-Schale/g, 'L Schale').replace(/M-Schale/g, 'M Schale')
+    .replace(/¹²₆C/g, 'Kohlenstoff 12')
+    .replace(/\s+/g, ' ').trim();
+}
+
+// Text in natürliche Sätze aufteilen für besseres Timing
+function splitSentences(text) {
+  return text
+    .split(/(?<=[.!?…])\s+/)
+    .map(s => s.trim())
+    .filter(s => s.length > 2);
+}
+
+function ttsLoadVoices() {
+  tts.voices = tts.synth.getVoices();
+  // Bevorzuge männliche deutsche Stimmen
+  const pref = [
+    v => v.lang === 'de-DE' && (v.name.includes('Hans') || v.name.includes('Stefan') || v.name.includes('Daniel') || v.name.includes('Klaus') || v.name.includes('Markus')),
+    v => v.lang === 'de-DE' && !v.name.toLowerCase().includes('anna') && !v.name.toLowerCase().includes('petra'),
+    v => v.lang === 'de-DE',
+    v => v.lang.startsWith('de'),
+    v => true,
+  ];
+  for (const fn of pref) {
+    const found = tts.voices.find(fn);
+    if (found) { tts.voice = found; break; }
+  }
+}
+
+function ttsStop() {
+  tts.synth.cancel();
+  tts.queue   = [];
+  tts.speaking = false;
+  clearInterval(tts.progressTimer);
+  ttsSetProgress(0);
+  ttsSpeakingUI(false);
+}
+
+function ttsSpeak(text) {
+  if (tts.muted || !text?.trim()) return;
+  ttsStop();
+
+  const clean     = stripHtml(text);
+  const sentences = splitSentences(clean);
+  if (!sentences.length) return;
+
+  tts.queue    = [...sentences];
+  tts.speaking = true;
+  tts.startTime = Date.now();
+  tts.duration  = Math.max(1500, (clean.length / 11) * (1000 / tts.speed));
+  ttsSpeakingUI(true);
+
+  clearInterval(tts.progressTimer);
+  tts.progressTimer = setInterval(() => {
+    ttsSetProgress(Math.min(99, ((Date.now() - tts.startTime) / tts.duration) * 100));
+  }, 80);
+
+  ttsPlayNext();
+}
+
+function ttsPlayNext() {
+  if (!tts.queue.length || tts.muted) {
+    tts.speaking = false;
+    clearInterval(tts.progressTimer);
+    ttsSetProgress(100);
+    setTimeout(() => ttsSetProgress(0), 500);
+    ttsSpeakingUI(false);
+    return;
+  }
+
+  const sentence = tts.queue.shift();
+  const utt = new SpeechSynthesisUtterance(sentence);
+  utt.lang   = 'de-DE';
+  utt.rate   = tts.speed;
+  utt.pitch  = 0.88;    // Etwas tiefer als Standard
+  utt.volume = 1.0;
+  if (tts.voice) utt.voice = tts.voice;
+
+  utt.onend   = () => setTimeout(ttsPlayNext, 80); // kurze Pause zwischen Sätzen
+  utt.onerror = () => ttsPlayNext(); // bei Fehler: nächster Satz
+
+  tts.synth.speak(utt);
+}
+
+function ttsSetProgress(pct) {
+  ['tts-progress-fill','cd-progress-fill'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.style.width = pct + '%';
+  });
+}
+
+function ttsSpeakingUI(on) {
+  const map = [
+    ['tts-play-btn', b => { b.textContent = on ? '■' : '▶'; b.classList.toggle('speaking', on); }],
+    ['cd-play-btn',  b => { b.textContent = on ? '■' : '▶'; b.style.background = on ? 'var(--amber)' : 'var(--teal)'; }],
+    ['speech-wave',  b => b.classList.toggle('talking', on)],
+    ['cd-wave',      b => b.classList.toggle('talking', on)],
+  ];
+  map.forEach(([id, fn]) => { const el = document.getElementById(id); if (el) fn(el); });
+  const av = document.querySelector('.npc-avatar'); if (av) av.classList.toggle('speaking', on);
+}
+
+function ttsInitControls() {
+  ttsLoadVoices();
+  if (tts.synth?.onvoiceschanged !== undefined) tts.synth.onvoiceschanged = ttsLoadVoices;
+
+  ['tts-play-btn','cd-play-btn'].forEach(id => {
+    const b = document.getElementById(id); if (!b) return;
+    b.addEventListener('click', () => tts.speaking ? ttsStop() : ttsSpeak(stripHtml(dialogText.innerHTML)));
+  });
+
+  ['tts-mute-btn','cd-mute-btn'].forEach(id => {
+    const b = document.getElementById(id); if (!b) return;
+    b.addEventListener('click', () => {
+      tts.muted = !tts.muted;
+      ['tts-mute-btn','cd-mute-btn'].forEach(i => {
+        const x = document.getElementById(i); if (!x) return;
+        x.textContent = tts.muted ? '🔇' : '🔊';
+        x.classList.toggle('muted', tts.muted);
+      });
+      if (tts.muted) ttsStop();
+    });
+  });
+
+  ['tts-speed-btn','cd-speed-btn'].forEach(id => {
+    const b = document.getElementById(id); if (!b) return;
+    b.textContent = tts.speed.toFixed(1) + '×';
+    b.addEventListener('click', () => {
+      tts.speedIdx = (tts.speedIdx + 1) % tts.speeds.length;
+      tts.speed    = tts.speeds[tts.speedIdx];
+      ['tts-speed-btn','cd-speed-btn'].forEach(i => {
+        const x = document.getElementById(i); if (x) x.textContent = tts.speed.toFixed(1) + '×';
+      });
+      if (tts.speaking) ttsSpeak(stripHtml(dialogText.innerHTML));
+    });
+  });
+
+  document.addEventListener('visibilitychange', () => { if (document.hidden) ttsStop(); });
+}
+
+// ── START ─────────────────────────────────────────────────────────────────────
+// init TTS after DOM ready
+ttsInitControls();
+init();
+
+</script>
+</body>
+</html>
